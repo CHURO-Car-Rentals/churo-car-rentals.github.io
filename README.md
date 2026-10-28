@@ -49,3 +49,7 @@ js/chatbot.js      chat assistant
 assets/cars/       car photos
 assets/brand/      logos and hero image
 ```
+
+## QR codes
+
+`qr/qr-churo.png` (QR with logo) and `qr/qr-churo-affiche.png` (printable poster) point to https://churo-car-rentals.github.io/. Rebuild with `python qr/make_qr.py`.
