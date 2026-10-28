@@ -2,7 +2,7 @@
 
 Website for CHURO Car Rentals (Drive Luxuriously, LLC). It covers daily and weekly rentals, Rent-to-Own with no credit check, and cars for sale. It also has an AI chat assistant.
 
-Live: <https://ftalla18.github.io/CHURO/>
+Live: <https://churo-car-rentals.github.io/>
 
 ## Features
 - **Fleet tiles** with a photo strip for each car: swipe on phones, or hover/tap the thumbnails. Each tile shows its availability badge and daily and weekly prices.

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ftalla18.github.io/CHURO/sitemap.xml
+Sitemap: https://churo-car-rentals.github.io/sitemap.xml
