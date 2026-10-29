@@ -8,5 +8,5 @@ export default {
   retakeHours: 24,            // wait after a failed attempt
   // Free automatic copy of every result to the owner's email: create an access key at https://web3forms.com
   // (enter the owner's email, copy the key here). Leave empty to turn it off.
-  web3formsKey: "",
+  web3formsKey: "ca690628-9f2f-403c-b3de-3fd83fa11b25",
 };
