@@ -29,7 +29,7 @@ function render() {
   bar.hidden = !(S && S.step === "q");
   if (meta.lockUntil > Date.now() && (!S || S.step === "info")) return locked();
   if (!S) return intro();
-  ({ info, license, q: question, attest, done: result }[S.step] || intro)();
+  ({ info, q: question, attest, done: result }[S.step] || intro)();
 }
 
 function intro() {
@@ -92,49 +92,10 @@ function info() {
     const c = live(); if (!c || c.errors.length) return;
     if (c.flags.length && confirmedFlags !== c.flags.join("|")) { msg.querySelector(".note")?.scrollIntoView({ block: "center", behavior: "smooth" }); return; }
     S.renter = { name: d.name.trim().replace(/\s+/g, " "), dob: d.dob, dl: c.normalized, dlState: d.dlState === "Other / international" ? "Other" : d.dlState, phone: d.phone.trim(), email: d.email.trim(), dlFlags: c.flags };
-    S.step = d.dlState === "FL" ? "license" : "q"; if (S.step === "q") { S.i = 0; S.started = Date.now(); }
-    save(); render();
-  };
-}
-
-// Florida: hand off to the official FLHSMV license check, then record what the renter saw.
-function license() {
-  const r = S.renter;
-  app.innerHTML = `<div class="card"><h2>Check that your license is valid</h2>
-    <p>Florida lets anyone check a license's status on the official FLHSMV website. Please check yours now:</p>
-    <ol class="steps">
-      <li>Tap <b>Open FLHSMV license check</b>. Your license number <b>${esc(r.dl)}</b> is copied, so you can paste it there.</li>
-      <li>Complete their security check and look at the <b>status</b>.</li>
-      <li>Come back to this tab and tell us what it says. A screenshot is optional but speeds up your approval.</li>
-    </ol>
-    <a class="btn btn--primary" id="open" href="${FLHSMV_CHECK}" target="_blank" rel="noopener">Open FLHSMV license check ↗</a>
-    <p style="margin:22px 0 8px;font-weight:600">What status did FLHSMV show?</p>
-    <div class="opts" id="st">
-      <button type="button" class="opt" data-v="VALID"><span class="dot"></span><span><b>VALID</b>: my license is valid</span></button>
-      <button type="button" class="opt" data-v="NOT VALID"><span class="dot"></span><span>Suspended, revoked, canceled, expired or anything other than valid</span></button>
-      <button type="button" class="opt" data-v="UNABLE"><span class="dot"></span><span>I couldn't complete the check right now</span></button>
-    </div>
-    <label class="f" style="margin-top:16px">Screenshot of the result (optional)<input type="file" accept="image/*" id="shot" /></label>
-    <p class="muted" id="shotInfo" style="font-size:.85rem"></p>
-    <div class="row"><button class="btn btn--ghost" id="back">Back</button><button class="btn btn--primary" id="next" disabled>Continue to the questions</button></div></div>`;
-  let status = S.dlStatus?.status || null, shot = S.dlStatus?.shot || null;
-  const next = app.querySelector("#next");
-  app.querySelector("#open").addEventListener("click", () => { navigator.clipboard?.writeText(r.dl.replace(/-/g, "")).catch(() => {}); S.dlOpened = Date.now(); save(); });
-  const pick = (v) => { status = v; app.querySelectorAll("#st .opt").forEach((x) => x.classList.toggle("on", x.dataset.v === v)); next.disabled = false; };
-  app.querySelectorAll("#st .opt").forEach((b) => (b.onclick = () => pick(b.dataset.v))); if (status) pick(status);
-  app.querySelector("#shot").onchange = async (e) => {
-    const f = e.target.files[0]; if (!f) return;
-    const bmp = await createImageBitmap(f, { imageOrientation: "from-image" }), k = Math.min(1, 1400 / Math.max(bmp.width, bmp.height));
-    const c = Object.assign(document.createElement("canvas"), { width: Math.round(bmp.width * k), height: Math.round(bmp.height * k) }); c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
-    shot = c.toDataURL("image/jpeg", 0.8); app.querySelector("#shotInfo").textContent = "Screenshot attached ✓ It will be added to your results PDF.";
-  };
-  app.querySelector("#back").onclick = () => { S.step = "info"; save(); render(); };
-  next.onclick = () => {
-    S.dlStatus = { status, shot, openedSite: !!S.dlOpened, at: new Date().toISOString() };
-    if (status === "NOT VALID") { S.step = "info"; save(); app.innerHTML = `<div class="card"><h1>We can't rent to you right now</h1><p>A valid driver's license is required to rent. Once your license is valid again, you're welcome to come back and complete the assessment.</p></div>`; store.del(SESSION, sessionStorage); S = null; return; }
     S.step = "q"; S.i = 0; S.started = Date.now(); save(); render();
   };
 }
+
 
 function question() {
   const it = S.items[S.i], q = byId[it.q];
@@ -191,7 +152,7 @@ async function result() {
   const sc = await score(answers);
   if (!S.recorded) { meta.attempts += 1; if (!sc.pass) meta.lockUntil = Date.now() + CONFIG.retakeHours * 3.6e6; else meta.lockUntil = 0; store.set(META, meta); S.recorded = true; S.attempt = meta.attempts; save(); }
   const fast = answers.filter((x) => x.ms < CONFIG.fastSeconds * 1000).length;
-  const payload = { v: 1, resultId: S.id, renter: S.renter, typedName: S.typed, started: new Date(S.started).toISOString(), finished: new Date(S.finished).toISOString(), seconds: Math.round((S.finished - S.started) / 1000), attempt: S.attempt, device: navigator.userAgent, bank: BANK.salt.slice(0, 8), dlStatus: S.dlStatus ? { status: S.dlStatus.status, screenshot: !!S.dlStatus.shot, openedSite: S.dlStatus.openedSite, at: S.dlStatus.at } : null, answers, score: { right: sc.right, total: sc.total, pct: sc.pct, pass: sc.pass }, fastAnswers: fast };
+  const payload = { v: 1, resultId: S.id, renter: S.renter, typedName: S.typed, started: new Date(S.started).toISOString(), finished: new Date(S.finished).toISOString(), seconds: Math.round((S.finished - S.started) / 1000), attempt: S.attempt, device: navigator.userAgent, bank: BANK.salt.slice(0, 8), answers, score: { right: sc.right, total: sc.total, pct: sc.pct, pass: sc.pass }, fastAnswers: fast };
   const fp = await fingerprint(payload);
   const missed = [...new Set(answers.filter((_, i) => !sc.marks[i]).map((x) => byId[x.q].topic))];
   app.innerHTML = `<div class="card ${sc.pass ? "pass" : "fail"}"><div class="score"><div class="score__ring" style="--p:${sc.pct}"><span>${sc.pct}%</span></div><span class="badge">${sc.pass ? "PASSED" : "NOT PASSED"}</span>
@@ -199,6 +160,7 @@ async function result() {
     ${sc.pass ? `<p>Thank you, ${esc(S.renter.name.split(" ")[0])}. Download your results PDF and send it to us to continue your booking.</p>` : `<p>You didn't reach ${BANK.pass}%. Please review your rental agreement on these topics, then retake the assessment after ${CONFIG.retakeHours} hours:</p><ul class="missed">${missed.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`}
     <div class="kv"><b>Result ID</b><span>${S.id}</span><b>Completed</b><span>${new Date(S.finished).toLocaleString()}</span><b>Time taken</b><span>${fmtDur(payload.seconds)}</span><b>Attempt</b><span>#${S.attempt}</span></div>
     <div class="row"><button class="btn btn--ghost" id="new" ${sc.pass ? "" : "hidden"}>Done</button><span></span><button class="btn btn--primary" id="pdf"><span class="spin"></span>Preparing your PDF…</button></div>
+    ${sc.pass && S.renter.dlState === "FL" ? `<div class="note" style="margin-top:18px"><b>Optional:</b> you can check your license status on the official Florida (FLHSMV) website. We also verify it before your rental.<br><a class="btn btn--ghost" id="dlcheck" style="margin-top:10px" href="${FLHSMV_CHECK}" target="_blank" rel="noopener">Check my license on FLHSMV ↗</a></div>` : ""}
     <p class="muted" id="sent" style="font-size:.85rem;margin-top:10px"></p></div>`;
   const btn = app.querySelector("#pdf");
   const file = await makePdf(payload, fp, sc, missed);
@@ -207,6 +169,7 @@ async function result() {
     if (navigator.canShare?.({ files: [file] })) { try { await navigator.share({ files: [file], title: "Renter assessment results", text: `My CHURO renter assessment results (${S.id})` }); return; } catch (e) { if (e.name === "AbortError") return; } }
     const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(file), download: file.name }); document.body.appendChild(a); a.click(); a.remove();
   };
+  app.querySelector("#dlcheck")?.addEventListener("click", () => navigator.clipboard?.writeText(S.renter.dl.replace(/-/g, "")).catch(() => {}));
   app.querySelector("#new").onclick = () => { store.del(SESSION, sessionStorage); S = null; render(); };
   const sent = app.querySelector("#sent");
   if (S.sent) sent.textContent = "A copy of your results was sent to the owner.";
@@ -217,7 +180,7 @@ async function result() {
 async function sendCopy(p, fp, sc) {
   const lines = p.answers.map((x, i) => `${i + 1}. [${sc.marks[i] ? "OK" : "X"}] ${byId[x.q].topic}: ${byId[x.q].options.find(([id]) => id === x.a)?.[1]} (${Math.round(x.ms / 1000)}s)`);
   const body = { access_key: CONFIG.web3formsKey, subject: `Renter assessment ${sc.pass ? "PASSED" : "FAILED"} ${sc.pct}% · ${p.renter.name} · ${p.resultId}`, from_name: "CHURO renter assessment", name: p.renter.name, email: p.renter.email,
-    message: `${p.renter.name} · born ${p.renter.dob} · DL ${p.renter.dl} (${p.renter.dlState}) · ${p.renter.phone} · ${p.renter.email}\nLicense check: ${p.renter.dlFlags?.length ? "FLAGGED: " + p.renter.dlFlags.join(" ") : "OK"}${p.dlStatus ? ` · FLHSMV status reported: ${p.dlStatus.status}${p.dlStatus.screenshot ? " (screenshot in PDF)" : ""}${p.dlStatus.openedSite ? "" : " (link not opened)"}` : ""}\nScore ${sc.right}/${sc.total} (${sc.pct}%) · ${sc.pass ? "PASSED" : "FAILED"} · attempt #${p.attempt} · ${Math.round(p.seconds / 60)} min · fast answers: ${p.fastAnswers}\nResult ID ${p.resultId} · fingerprint ${fp}\nCompleted ${p.finished}\n\n${lines.join("\n")}\n\n${pack({ ...p, fingerprint: fp })}` };
+    message: `${p.renter.name} · born ${p.renter.dob} · DL ${p.renter.dl} (${p.renter.dlState}) · ${p.renter.phone} · ${p.renter.email}\nLicense check: ${p.renter.dlFlags?.length ? "FLAGGED: " + p.renter.dlFlags.join(" ") : "OK"}\nScore ${sc.right}/${sc.total} (${sc.pct}%) · ${sc.pass ? "PASSED" : "FAILED"} · attempt #${p.attempt} · ${Math.round(p.seconds / 60)} min · fast answers: ${p.fastAnswers}\nResult ID ${p.resultId} · fingerprint ${fp}\nCompleted ${p.finished}\n\n${lines.join("\n")}\n\n${pack({ ...p, fingerprint: fp })}` };
   // plain form post (no CORS preflight), the way Web3Forms recommends for browsers
   const form = new FormData(); for (const [k, v] of Object.entries(body)) form.append(k, v);
   const r = await fetch("https://api.web3forms.com/submit", { method: "POST", body: form, headers: { Accept: "application/json" } });
@@ -248,8 +211,7 @@ async function makePdf(p, fp, sc, missed) {
   y -= 84;
   const row = (k, v) => { need(16); page.drawText(clean(k), { x: M, y: y - 10, size: 10, font: bold, color: MUTED }); for (const [i, l] of wrap(v, font, 10, W - 2 * M - 150).entries()) { if (i) { need(14); } page.drawText(l, { x: M + 150, y: y - 10, size: 10, font, color: INK }); y -= 14; } y -= 2; };
   row("Renter (legal name)", p.renter.name); row("Driver's license", `${p.renter.dl} (${p.renter.dlState}) · born ${p.renter.dob}`);
-  row("License number check", p.renter.dlState === "FL" ? (p.renter.dlFlags?.length ? `FLAGGED, renter confirmed the number: ${p.renter.dlFlags.join(" ")}` : "Matches last name and date of birth (Florida format)") : "Format checked (non-Florida license)");
-  if (p.dlStatus) row("FLHSMV status (reported)", `${p.dlStatus.status}${p.dlStatus.screenshot ? " · screenshot attached (last page)" : " · no screenshot"}${p.dlStatus.openedSite ? "" : " · did not open the FLHSMV link"}`); row("Phone / email", `${p.renter.phone} · ${p.renter.email}`);
+  row("License number check", p.renter.dlState === "FL" ? (p.renter.dlFlags?.length ? `FLAGGED, renter confirmed the number: ${p.renter.dlFlags.join(" ")}` : "Matches last name and date of birth (Florida format)") : "Format checked (non-Florida license)"); row("Phone / email", `${p.renter.phone} · ${p.renter.email}`);
   row("Started", `${new Date(p.started).toLocaleString()} (${p.started})`); row("Submitted", `${new Date(p.finished).toLocaleString()} (${p.finished})`);
   row("Time taken", fmtDur(p.seconds)); row("Attempt", `#${p.attempt} on this device`); row("Result ID", p.resultId);
   row("Fingerprint (SHA-256)", fp); row("Device", p.device.slice(0, 160));
@@ -272,10 +234,6 @@ async function makePdf(p, fp, sc, missed) {
     for (const id of item.order) { const t = q.options.find(([o]) => o === id)[1]; text(`${id === x.a ? "[X]" : "[  ]"} ${t}`, { size: 9.5, x: M + 10, width: W - 2 * M - 10, color: id === x.a ? INK : MUTED, f: id === x.a ? bold : font }); }
     y -= 6;
   });
-  if (S.dlStatus?.shot) { // renter's FLHSMV screenshot
-    try { newPage(); page.drawText("FLHSMV license check (screenshot provided by the renter)", { x: M, y: y - 14, size: 13, font: bold, color: INK }); y -= 26;
-      const img = await doc.embedJpg(S.dlStatus.shot), k = Math.min((W - 2 * M) / img.width, (y - M - 30) / img.height); page.drawImage(img, { x: M, y: y - img.height * k, width: img.width * k, height: img.height * k }); } catch {}
-  }
   // footer on every page + embedded copy of the result (for the owner's verify page)
   const pages = doc.getPages();
   pages.forEach((pg, i) => { pg.drawText(clean(`Result ID ${p.resultId} · fingerprint ${fp.slice(0, 16)}… · page ${i + 1} of ${pages.length}`), { x: M, y: 28, size: 8, font, color: MUTED }); });
