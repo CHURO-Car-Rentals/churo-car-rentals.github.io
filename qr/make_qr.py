@@ -1,10 +1,14 @@
 """Builds the branded CHURO QR code + a printable poster.
-Usage: python make_qr.py [URL]   (needs: pip install pillow "qrcode[pil]")"""
+Usage: python make_qr.py [URL] [NAME] [HEADLINE] [LINE2]   (needs: pip install pillow "qrcode[pil]")
+Defaults make the website QR (qr-churo.png + qr-churo-affiche.png)."""
 import sys, os
 import qrcode
 from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__))
 URL = sys.argv[1] if len(sys.argv) > 1 else "https://churo-car-rentals.github.io/"
+NAME = sys.argv[2] if len(sys.argv) > 2 else "qr-churo"
+HEADLINE = sys.argv[3] if len(sys.argv) > 3 else "Scan to book your ride"
+LINE2 = sys.argv[4] if len(sys.argv) > 4 else "Rentals · Rent-to-Own · Sarasota, FL"
 INK, BLUE, ACCENT = (7, 26, 51), (22, 104, 227), (44, 197, 232)
 qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=24, border=2)
 qr.add_data(URL); qr.make(fit=True)
@@ -17,7 +21,7 @@ badge = Image.new("RGBA", (bw, int(logo.height + bw * 0.14)), (255, 255, 255, 25
 mask = Image.new("L", badge.size, 0); ImageDraw.Draw(mask).rounded_rectangle((0, 0, badge.width - 1, badge.height - 1), radius=int(bw * 0.1), fill=255)
 badge.paste(logo, ((bw - logo.width) // 2, (badge.height - logo.height) // 2), logo)
 img.paste(badge, ((W - badge.width) // 2, (W - badge.height) // 2), mask)
-img.convert("RGB").save(os.path.join(HERE, "qr-churo.png"))
+img.convert("RGB").save(os.path.join(HERE, f"{NAME}.png"))
 
 def font(sz):
     for p in ["/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/Library/Fonts/Arial Bold.ttf", "DejaVuSans-Bold.ttf"]:
@@ -28,10 +32,10 @@ pad = 120
 card = Image.new("RGB", (W + 2 * pad, W + 600), (255, 255, 255)); d = ImageDraw.Draw(card)
 d.rectangle((0, 0, card.width, 330), fill=BLUE)
 d.rectangle((0, 322, card.width, 330), fill=ACCENT)
-for text, size, y, color in [("Scan to book your ride", 100, 110, (255, 255, 255)),
-                             ("Rentals · Rent-to-Own · Sarasota, FL", 60, W + 385, INK),
+for text, size, y, color in [(HEADLINE, 100, 110, (255, 255, 255)),
+                             (LINE2, 60, W + 385, INK),
                              ("Fast. Easy. Available!", 74, W + 475, BLUE)]:
     f = font(size); d.text(((card.width - d.textlength(text, font=f)) / 2, y), text, font=f, fill=color)
 card.paste(img.convert("RGB"), (pad, 360))
-card.save(os.path.join(HERE, "qr-churo-affiche.png"))
+card.save(os.path.join(HERE, f"{NAME}-affiche.png"))
 print("QR ->", URL)

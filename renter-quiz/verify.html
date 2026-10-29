@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify an assessment · CHURO</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="quiz.css" />
+</head>
+<body>
+  <header class="top"><div class="wrap top__in"><img src="../logo.jpg" alt="" width="44" height="44" /><div><b>Verify a renter's results</b><small>For the owner · nothing is uploaded</small></div></div></header>
+  <main class="wrap">
+    <div class="card">
+      <h2>Drop the renter's results PDF</h2>
+      <p class="muted">This reads the copy of the answers embedded in the PDF, checks its fingerprint, and re-scores every answer against the answer key. If someone edited the PDF (score, name, answers), it shows up here.</p>
+      <label class="drop" id="drop"><input type="file" accept="application/pdf" hidden id="file" /><b>Choose or drop a PDF</b></label>
+      <div id="out"></div>
+    </div>
+  </main>
+  <script type="module">
+    import { BANK, byId, score, fingerprint, unpack } from "./common.js";
+    const { PDFDocument } = await import("https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.esm.min.js");
+    const out = document.getElementById("out"), esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    async function check(f) {
+      out.innerHTML = `<p><span class="spin"></span>Checking…</p>`;
+      try {
+        const doc = await PDFDocument.load(await f.arrayBuffer(), { updateMetadata: false });
+        const data = unpack(doc.getKeywords());
+        if (!data) throw new Error("This PDF doesn't contain assessment data. It may not come from the assessment, or it was re-saved by another program.");
+        const { fingerprint: fp, ...payload } = data;
+        const fpOk = (await fingerprint(payload)) === fp;
+        const sc = await score(payload.answers.map((x) => ({ q: x.q, a: x.a })));
+        const scoreOk = sc.right === payload.score.right && sc.pass === payload.score.pass;
+        const bankOk = payload.bank === BANK.salt.slice(0, 8);
+        const verdict = fpOk && scoreOk && bankOk;
+        out.innerHTML = `<p class="${verdict ? "ok" : "bad"}" style="font-size:1.1rem;margin-top:18px">${verdict ? "✓ Authentic: the data is unchanged and the score is correct." : "✗ Problem found: don't rely on this PDF."}</p>
+          <div class="kv">
+            <b>Fingerprint</b><span class="${fpOk ? "ok" : "bad"}">${fpOk ? "matches" : "DOES NOT MATCH: the data was edited"}</span>
+            <b>Score re-checked</b><span class="${scoreOk ? "ok" : "bad"}">${sc.right}/${sc.total} (${sc.pct}%) ${sc.pass ? "PASS" : "FAIL"}${scoreOk ? "" : ` · the PDF claims ${payload.score.right}/${payload.score.total}`}</span>
+            <b>Question set</b><span class="${bankOk ? "ok" : "bad"}">${bankOk ? "current version" : "older version of the questions (re-scored with the current key)"}</span>
+            <b>Renter</b><span>${esc(payload.renter.name)} · DL ${esc(payload.renter.dl)} (${esc(payload.renter.dlState)})</span>
+            <b>Contact</b><span>${esc(payload.renter.phone)} · ${esc(payload.renter.email)}</span>
+            <b>Typed name</b><span>${esc(payload.typedName)}</span>
+            <b>Submitted</b><span>${new Date(payload.finished).toLocaleString()} · ${Math.round(payload.seconds / 60)} min · attempt #${payload.attempt}</span>
+            <b>Fast answers</b><span>${payload.fastAnswers} under 5 seconds</span>
+            <b>Result ID</b><span>${esc(payload.resultId)}</span>
+          </div>
+          <p class="muted" style="font-size:.85rem">Also compare the name, score and Result ID printed on the PDF's pages with what's shown here (and with your email copy, if you turned it on).</p>
+          <table class="ans"><tr><th>#</th><th>Topic</th><th>Their answer</th><th>Time</th></tr>${payload.answers.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(byId[x.q]?.topic || x.q)}</td><td class="${sc.marks[i] ? "ok" : "bad"}">${sc.marks[i] ? "✓" : "✗"} ${esc(byId[x.q]?.options.find(([o]) => o === x.a)?.[1] || x.a)}</td><td>${Math.round(x.ms / 1000)}s</td></tr>`).join("")}</table>`;
+      } catch (e) { out.innerHTML = `<p class="bad" style="margin-top:16px">${esc(e.message)}</p>`; }
+    }
+    const input = document.getElementById("file"), drop = document.getElementById("drop");
+    input.onchange = () => input.files[0] && check(input.files[0]);
+    drop.ondragover = (e) => e.preventDefault(); drop.ondrop = (e) => { e.preventDefault(); e.dataTransfer.files[0] && check(e.dataTransfer.files[0]); };
+  </script>
+</body>
+</html>
