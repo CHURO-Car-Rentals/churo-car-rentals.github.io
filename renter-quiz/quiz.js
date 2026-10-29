@@ -143,15 +143,21 @@ async function result() {
     const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(file), download: file.name }); document.body.appendChild(a); a.click(); a.remove();
   };
   app.querySelector("#new").onclick = () => { store.del(SESSION, sessionStorage); S = null; render(); };
-  if (CONFIG.web3formsKey && !S.sent) sendCopy(payload, fp, sc).then(() => { S.sent = true; save(); app.querySelector("#sent").textContent = "A copy of your results was sent to the owner."; }).catch(() => {});
+  const sent = app.querySelector("#sent");
+  if (S.sent) sent.textContent = "A copy of your results was sent to the owner.";
+  else if (CONFIG.web3formsKey) sendCopy(payload, fp, sc).then(() => { S.sent = true; save(); sent.textContent = "A copy of your results was sent to the owner."; })
+    .catch(() => { sent.innerHTML = `We couldn't send a copy automatically. Please send your results PDF by text to <a href="sms:${CONFIG.ownerPhone}">${CONFIG.ownerPhone.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, "($1) $2-$3")}</a>.`; });
 }
 
 async function sendCopy(p, fp, sc) {
   const lines = p.answers.map((x, i) => `${i + 1}. [${sc.marks[i] ? "OK" : "X"}] ${byId[x.q].topic}: ${byId[x.q].options.find(([id]) => id === x.a)?.[1]} (${Math.round(x.ms / 1000)}s)`);
   const body = { access_key: CONFIG.web3formsKey, subject: `Renter assessment ${sc.pass ? "PASSED" : "FAILED"} ${sc.pct}% · ${p.renter.name} · ${p.resultId}`, from_name: "CHURO renter assessment", name: p.renter.name, email: p.renter.email,
     message: `${p.renter.name} · DL ${p.renter.dl} (${p.renter.dlState}) · ${p.renter.phone} · ${p.renter.email}\nScore ${sc.right}/${sc.total} (${sc.pct}%) · ${sc.pass ? "PASSED" : "FAILED"} · attempt #${p.attempt} · ${Math.round(p.seconds / 60)} min · fast answers: ${p.fastAnswers}\nResult ID ${p.resultId} · fingerprint ${fp}\nCompleted ${p.finished}\n\n${lines.join("\n")}\n\n${pack({ ...p, fingerprint: fp })}` };
-  const r = await fetch("https://api.web3forms.com/submit", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(body) });
-  if (!r.ok) throw new Error("send failed");
+  // plain form post (no CORS preflight), the way Web3Forms recommends for browsers
+  const form = new FormData(); for (const [k, v] of Object.entries(body)) form.append(k, v);
+  const r = await fetch("https://api.web3forms.com/submit", { method: "POST", body: form, headers: { Accept: "application/json" } });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || j.success === false) throw new Error(j.message || "send failed");
 }
 
 // ---------------------------------------------------------------- results PDF

@@ -17,6 +17,11 @@
       <label class="drop" id="drop"><input type="file" accept="application/pdf" hidden id="file" /><b>Choose or drop a PDF</b></label>
       <div id="out"></div>
     </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Email copies</h2>
+      <p class="muted">Every submitted assessment also emails you a copy. Click to send yourself a test and confirm it arrives (check spam the first time).</p>
+      <button class="btn btn--ghost" id="test">Send a test email</button> <span id="testOut" style="margin-left:8px"></span>
+    </div>
   </main>
   <script type="module">
     import { BANK, byId, score, fingerprint, unpack } from "./common.js";
@@ -50,6 +55,17 @@
           <table class="ans"><tr><th>#</th><th>Topic</th><th>Their answer</th><th>Time</th></tr>${payload.answers.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(byId[x.q]?.topic || x.q)}</td><td class="${sc.marks[i] ? "ok" : "bad"}">${sc.marks[i] ? "✓" : "✗"} ${esc(byId[x.q]?.options.find(([o]) => o === x.a)?.[1] || x.a)}</td><td>${Math.round(x.ms / 1000)}s</td></tr>`).join("")}</table>`;
       } catch (e) { out.innerHTML = `<p class="bad" style="margin-top:16px">${esc(e.message)}</p>`; }
     }
+    import("./config.js").then(({ default: CONFIG }) => {
+      const b = document.getElementById("test"), o = document.getElementById("testOut");
+      if (!CONFIG.web3formsKey) { b.disabled = true; o.textContent = "Not set up yet."; return; }
+      b.onclick = async () => {
+        b.disabled = true; o.textContent = "Sending…";
+        const f = new FormData(); Object.entries({ access_key: CONFIG.web3formsKey, subject: "TEST · CHURO renter assessment email copies work", from_name: "CHURO renter assessment", name: "Owner test", message: "If you can read this, every completed renter assessment will also arrive in this inbox." }).forEach(([k, v]) => f.append(k, v));
+        try { const r = await fetch("https://api.web3forms.com/submit", { method: "POST", body: f, headers: { Accept: "application/json" } }); const j = await r.json(); o.innerHTML = j.success ? '<span class="ok">Sent. Check your inbox.</span>' : `<span class="bad">${esc(j.message || "Failed")}</span>`; }
+        catch (e) { o.innerHTML = `<span class="bad">Couldn't reach the email service (${esc(e.message)}).</span>`; }
+        b.disabled = false;
+      };
+    });
     const input = document.getElementById("file"), drop = document.getElementById("drop");
     input.onchange = () => input.files[0] && check(input.files[0]);
     drop.ondragover = (e) => e.preventDefault(); drop.ondrop = (e) => { e.preventDefault(); e.dataTransfer.files[0] && check(e.dataTransfer.files[0]); };
