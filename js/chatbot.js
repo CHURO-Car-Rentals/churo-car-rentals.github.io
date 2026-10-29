@@ -88,12 +88,12 @@ FACTS
 - Cars available: ${avail}.${soon ? ` Coming soon: ${soon}.` : ""}
 - To rent: valid Florida driver's license + 2 different recent proofs of address in your name (utility bill, paystub, bank statement). Insurance card optional. Age 21+.
 - Daily rental deposit: $200 with 2 proofs of address, otherwise up to $1,000 depending on the car; refunded minus tolls, citations, fees.
-- Payment: booking form (card), cash, Apple Pay, Venmo, Chime, Zelle.
+- Payment: cash, Apple Pay, Venmo, Chime or Zelle. Do not mention or offer card payments.
 - Pick-up and return in Sarasota, FL 34234 (round trip). Delivery within 15 miles of 34234 costs $140.
 - Drive anywhere in Florida; cars are GPS-tracked and NOT allowed outside Florida. 200 miles per day included.
 - Cars are cleaned, sanitized and fully inspected before every rental; pre- and post-trip photos are taken each time.
 - To book: use the "Book now" link (it notifies the owner). Questions: tell them to tap "Call us" or "Text us" (never write out a phone number). Before the first rental every renter completes the renter assessment at renter-quiz/ (95% needed). Extensions: tell us before the rental ends.
-- Rent-to-Own: rent 1 week first, then sign and notarize at MIDFLORIDA with the down payment and proof of insurance; weekly or bi-weekly payments, 12 months max, no monthly plans; customer handles maintenance; Uber/DoorDash allowed, nothing illegal.
+- Rent-to-Own: rent 1 week first, then sign and notarize at MIDFLORIDA with the down payment and proof of insurance; weekly or bi-weekly payments, 12 months max, no monthly plans; customer handles maintenance; Uber/DoorDash/gig work ONLY with the owner's explicit written authorization (same as rentals); nothing illegal.
 
 RULES
 - Never invent prices, fees, numbers or policies. Don't quote any price not listed above; for exact prices or payments, point to the car tiles or the payment calculator.
@@ -247,7 +247,7 @@ RULES
     deposit: () => `${P.deposit}\n\nDeposit without proofs of address:\n${C.depositList().map((x) => `- ${x}`).join("\n")}`,
     about: () => `CHURO is a family-operated rental business in Sarasota. We've completed **${C.company.turoTrips} trips on Turo** with a **${C.company.rating}★ rating**, and now rent directly to you: no middlemen, no surprises. ⭐`,
     insurance: () => `**Rentals:** ask about coverage when you book.\n\n**Rent-to-Own:** ${P.rtoInsurance}`,
-    rideshare: () => `${P.rideshare} 🚗💨 Just keep in mind gig driving adds a lot of miles, so stay on top of maintenance.`,
+    rideshare: () => `${P.rideshare} [💬 Text us](#text) to ask.`,
     monthly: () => "We don't offer monthly payment plans. Rent-to-Own payments are **weekly or every two weeks**, as low as **$175/week** depending on the car (most cars have a $300/week minimum). Want me to work out a car for you?",
     whyweek: () => "Since there's **no credit check**, the one-week rental shows you can make payments on time. It also lets you get a feel for the car **before** committing. If you notice anything that needs fixing that week, tell us and we'll fix it **before** we sign at MIDFLORIDA.",
     delivery: () => `${P.pickup} Pick-up details are confirmed when you book. Questions? [📞 Call us](#call) or [💬 Text us](#text).`,

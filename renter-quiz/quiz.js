@@ -1,8 +1,8 @@
 // Renter assessment: rules -> renter details -> 20 scenarios (3 fixed + 17 random, answers shuffled) ->
 // attestation + signature -> score -> results PDF (with an embedded, fingerprinted copy of every answer).
-import CONFIG from "./config.js";
-import { BANK, byId, score, fingerprint, pack } from "./common.js";
-import { checkLicense, STATES, FLHSMV_CHECK } from "./license.js";
+import CONFIG from "./config.js?v=202610291442";
+import { BANK, byId, score, fingerprint, pack } from "./common.js?v=202610291442";
+import { checkLicense, STATES, FLHSMV_CHECK } from "./license.js?v=202610291442";
 
 const PDFLIB = "https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.esm.min.js";
 const app = document.getElementById("app"), bar = document.getElementById("progress");

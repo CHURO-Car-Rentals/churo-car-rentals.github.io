@@ -6,7 +6,7 @@
   <title>Verify an assessment · CHURO</title>
   <meta name="robots" content="noindex, nofollow" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="quiz.css" />
+  <link rel="stylesheet" href="quiz.css?v=202610291442" />
 </head>
 <body>
   <header class="top"><div class="wrap top__in"><img src="../logo.jpg" alt="" width="44" height="44" /><div><b>Verify a renter's results</b><small>For the owner · nothing is uploaded</small></div></div></header>
@@ -24,7 +24,7 @@
     </div>
   </main>
   <script type="module">
-    import { BANK, byId, score, fingerprint, unpack } from "./common.js";
+    import { BANK, byId, score, fingerprint, unpack } from "./common.js?v=202610291442";
     const { PDFDocument } = await import("https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.esm.min.js");
     const out = document.getElementById("out"), esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     async function check(f) {
@@ -57,7 +57,7 @@
           <table class="ans"><tr><th>#</th><th>Topic</th><th>Their answer</th><th>Time</th></tr>${payload.answers.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(byId[x.q]?.topic || x.q)}</td><td class="${sc.marks[i] ? "ok" : "bad"}">${sc.marks[i] ? "✓" : "✗"} ${esc(byId[x.q]?.options.find(([o]) => o === x.a)?.[1] || x.a)}</td><td>${Math.round(x.ms / 1000)}s</td></tr>`).join("")}</table>`;
       } catch (e) { out.innerHTML = `<p class="bad" style="margin-top:16px">${esc(e.message)}</p>`; }
     }
-    import("./config.js").then(({ default: CONFIG }) => {
+    import("./config.js?v=202610291442").then(({ default: CONFIG }) => {
       const b = document.getElementById("test"), o = document.getElementById("testOut");
       if (!CONFIG.web3formsKey) { b.disabled = true; o.textContent = "Not set up yet."; return; }
       b.onclick = async () => {
