@@ -44,14 +44,17 @@
             <b>Fingerprint</b><span class="${fpOk ? "ok" : "bad"}">${fpOk ? "matches" : "DOES NOT MATCH: the data was edited"}</span>
             <b>Score re-checked</b><span class="${scoreOk ? "ok" : "bad"}">${sc.right}/${sc.total} (${sc.pct}%) ${sc.pass ? "PASS" : "FAIL"}${scoreOk ? "" : ` · the PDF claims ${payload.score.right}/${payload.score.total}`}</span>
             <b>Question set</b><span class="${bankOk ? "ok" : "bad"}">${bankOk ? "current version" : "older version of the questions (re-scored with the current key)"}</span>
-            <b>Renter</b><span>${esc(payload.renter.name)} · DL ${esc(payload.renter.dl)} (${esc(payload.renter.dlState)})</span>
+            <b>Renter</b><span>${esc(payload.renter.name)}${payload.renter.dob ? ` · born ${esc(payload.renter.dob)}` : ""}</span>
+            <b>License</b><span>${esc(payload.renter.dl)} (${esc(payload.renter.dlState)}) ${payload.renter.dlState === "FL" ? `<button class="btn btn--ghost" style="padding:4px 10px;font-size:.8rem;margin-left:6px" data-dl="${esc(payload.renter.dl.replace(/-/g, ""))}">Copy & check on FLHSMV ↗</button>` : ""}</span>
+            <b>Number check</b><span class="${payload.renter.dlFlags?.length ? "bad" : "ok"}">${payload.renter.dlFlags ? (payload.renter.dlFlags.length ? "FLAGGED: " + payload.renter.dlFlags.map(esc).join(" ") : "matches name and birth date") : "not recorded"}</span>
+            <b>FLHSMV (renter-reported)</b><span class="${payload.dlStatus?.status === "VALID" ? "ok" : "bad"}">${payload.dlStatus ? `${esc(payload.dlStatus.status)}${payload.dlStatus.screenshot ? " · screenshot in the PDF" : " · no screenshot"}${payload.dlStatus.openedSite ? "" : " · didn't open the FLHSMV link"}` : "n/a"}</span>
             <b>Contact</b><span>${esc(payload.renter.phone)} · ${esc(payload.renter.email)}</span>
             <b>Typed name</b><span>${esc(payload.typedName)}</span>
             <b>Submitted</b><span>${new Date(payload.finished).toLocaleString()} · ${Math.round(payload.seconds / 60)} min · attempt #${payload.attempt}</span>
             <b>Fast answers</b><span>${payload.fastAnswers} under 5 seconds</span>
             <b>Result ID</b><span>${esc(payload.resultId)}</span>
           </div>
-          <p class="muted" style="font-size:.85rem">Also compare the name, score and Result ID printed on the PDF's pages with what's shown here (and with your email copy, if you turned it on).</p>
+          <p class="muted" style="font-size:.85rem">The FLHSMV status is what the renter reported: always confirm it yourself with the button above before handing over keys. Also compare the name, score and Result ID printed on the PDF's pages with what's shown here (and with your email copy, if you turned it on).</p>
           <table class="ans"><tr><th>#</th><th>Topic</th><th>Their answer</th><th>Time</th></tr>${payload.answers.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(byId[x.q]?.topic || x.q)}</td><td class="${sc.marks[i] ? "ok" : "bad"}">${sc.marks[i] ? "✓" : "✗"} ${esc(byId[x.q]?.options.find(([o]) => o === x.a)?.[1] || x.a)}</td><td>${Math.round(x.ms / 1000)}s</td></tr>`).join("")}</table>`;
       } catch (e) { out.innerHTML = `<p class="bad" style="margin-top:16px">${esc(e.message)}</p>`; }
     }
@@ -66,6 +69,7 @@
         b.disabled = false;
       };
     });
+    document.addEventListener("click", (e) => { const b = e.target.closest("[data-dl]"); if (!b) return; navigator.clipboard?.writeText(b.dataset.dl).catch(() => {}); window.open("https://services.flhsmv.gov/DLCheck/", "_blank", "noopener"); });
     const input = document.getElementById("file"), drop = document.getElementById("drop");
     input.onchange = () => input.files[0] && check(input.files[0]);
     drop.ondragover = (e) => e.preventDefault(); drop.ondrop = (e) => { e.preventDefault(); e.dataTransfer.files[0] && check(e.dataTransfer.files[0]); };

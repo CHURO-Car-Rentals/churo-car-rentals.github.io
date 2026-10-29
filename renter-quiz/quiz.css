@@ -48,3 +48,5 @@ input:focus, select:focus { outline: none; border-color: var(--blue); box-shadow
 .drop { border: 2px dashed #9fb2c8; border-radius: 16px; padding: 40px 16px; text-align: center; cursor: pointer; background: #fff; }
 .ok { color: var(--ok); font-weight: 700; } .bad { color: var(--bad); font-weight: 700; }
 table.ans { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: 12px; } table.ans td, table.ans th { border-bottom: 1px solid var(--line); padding: 6px; text-align: left; vertical-align: top; }
+.bad-note { background: #fde8e8; border-color: #f3b4b4; color: #8a1c1c; }
+.steps { padding-left: 20px; margin: 12px 0 18px; } .steps li { margin: 6px 0; }
