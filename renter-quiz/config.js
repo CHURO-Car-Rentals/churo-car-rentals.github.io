@@ -2,7 +2,8 @@
 export default {
   business: "Drive Luxuriously, LLC",
   brand: "CHURO Car Rentals",
-  ownerPhone: "+14049528569", // where renters send their results (text / WhatsApp)
+  ownerPhone: ["+1", "404", "952", "85", "69"], // joined only when a renter taps "text us" (never shown as text)
+  minAge: 21,
   minMinutes: 4,              // can't submit faster than this
   fastSeconds: 5,             // answers quicker than this are flagged as "not read"
   retakeHours: 24,            // wait after a failed attempt

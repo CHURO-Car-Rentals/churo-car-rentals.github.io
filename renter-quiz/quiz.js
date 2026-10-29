@@ -89,6 +89,7 @@ function info() {
     if (missing.length || !d.ok) { form.reportValidity(); return; }
     if (d.name.trim().split(/\s+/).length < 2) { msg.innerHTML = `<div class="note bad-note">Please enter your full legal name (first and last).</div>`; return; }
     const age = (Date.now() - new Date(d.dob)) / 3.15576e10; if (age < 16 || age > 110) { msg.innerHTML = `<div class="note bad-note">Please check your date of birth.</div>`; return; }
+    if (age < CONFIG.minAge) { app.innerHTML = `<div class="card"><h1>Renters must be ${CONFIG.minAge} or older</h1><p>Thanks for your interest in ${esc(CONFIG.brand)}. You can rent with us once you turn ${CONFIG.minAge}.</p><p><a class="btn btn--ghost" href="../">Back to the website</a></p></div>`; store.del(SESSION, sessionStorage); S = null; return; }
     const c = live(); if (!c || c.errors.length) return;
     if (c.flags.length && confirmedFlags !== c.flags.join("|")) { msg.querySelector(".note")?.scrollIntoView({ block: "center", behavior: "smooth" }); return; }
     S.renter = { name: d.name.trim().replace(/\s+/g, " "), dob: d.dob, dl: c.normalized, dlState: d.dlState === "Other / international" ? "Other" : d.dlState, phone: d.phone.trim(), email: d.email.trim(), dlFlags: c.flags };
@@ -174,7 +175,7 @@ async function result() {
   const sent = app.querySelector("#sent");
   if (S.sent) sent.textContent = "A copy of your results was sent to the owner.";
   else if (CONFIG.web3formsKey) sendCopy(payload, fp, sc).then(() => { S.sent = true; save(); sent.textContent = "A copy of your results was sent to the owner."; })
-    .catch(() => { sent.innerHTML = `We couldn't send a copy automatically. Please send your results PDF by text to <a href="sms:${CONFIG.ownerPhone}">${CONFIG.ownerPhone.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, "($1) $2-$3")}</a>.`; });
+    .catch(() => { sent.innerHTML = `We couldn't send a copy automatically. Please <a href="#" id="textUs">text us your results PDF</a>.`; sent.querySelector("#textUs").onclick = (e) => { e.preventDefault(); location.href = `sms:${CONFIG.ownerPhone.join("")}`; }; });
 }
 
 async function sendCopy(p, fp, sc) {
