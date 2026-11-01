@@ -1,5 +1,5 @@
 // Shared by the quiz and the owner's verify page: scoring, fingerprints, result packing.
-import BANK from "./questions.js?v=202611011224";
+import BANK from "./questions.js?v=202611011227";
 
 export { BANK };
 export const byId = Object.fromEntries(BANK.questions.map((q) => [q.id, q]));

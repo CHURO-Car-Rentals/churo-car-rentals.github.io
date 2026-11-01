@@ -135,7 +135,7 @@ window.CHURO = {
     pickup: "Pick-up and return are in Sarasota, FL 34234 (free). Prefer delivery? We deliver within 15 miles of 34234 for $140.",
     travel: "Drive anywhere in Florida. Cars are GPS-tracked and are not allowed outside Florida.",
     mileage: "Each car includes 200 miles per day, which is plenty: most renters never get close.",
-    booking: "Once you've picked your car, book it through the Book now link. That notifies us right away and we'll confirm. Questions first? Tap Call us or Text us.",
+    booking: "Once you've picked your car, book it through the Book now link. That notifies us right away and we'll confirm. Questions first? WhatsApp us or call us.",
     extend: "Contact us before your rental ends and we'll extend it whenever possible.",
     cancellation: "Plans change — contact us as early as possible and we'll work with you.",
     issues: "If anything goes wrong during your rental, contact us right away and we'll resolve it as quickly as possible.",

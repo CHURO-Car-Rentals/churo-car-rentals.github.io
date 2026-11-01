@@ -1,8 +1,8 @@
 // Renter assessment: rules -> renter details -> 20 scenarios (3 fixed + 17 random, answers shuffled) ->
 // attestation + signature -> score -> results PDF (with an embedded, fingerprinted copy of every answer).
-import CONFIG from "./config.js?v=202611011224";
-import { BANK, byId, score, fingerprint, pack } from "./common.js?v=202611011224";
-import { checkLicense, STATES, FLHSMV_CHECK } from "./license.js?v=202611011224";
+import CONFIG from "./config.js?v=202611011227";
+import { BANK, byId, score, fingerprint, pack } from "./common.js?v=202611011227";
+import { checkLicense, STATES, FLHSMV_CHECK } from "./license.js?v=202611011227";
 
 const PDFLIB = "https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.esm.min.js";
 const app = document.getElementById("app"), bar = document.getElementById("progress");
@@ -175,7 +175,7 @@ async function result() {
   const sent = app.querySelector("#sent");
   if (S.sent) sent.textContent = "A copy of your results was sent to the owner.";
   else if (CONFIG.web3formsKey) sendCopy(payload, fp, sc).then(() => { S.sent = true; save(); sent.textContent = "A copy of your results was sent to the owner."; })
-    .catch(() => { sent.innerHTML = `We couldn't send a copy automatically. Please <a href="#" id="textUs">text us your results PDF</a>.`; sent.querySelector("#textUs").onclick = (e) => { e.preventDefault(); location.href = `sms:${CONFIG.ownerPhone.join("")}`; }; });
+    .catch(() => { sent.innerHTML = `We couldn't send a copy automatically. Please <a href="#" id="textUs">send us your results PDF on WhatsApp</a>.`; sent.querySelector("#textUs").onclick = (e) => { e.preventDefault(); window.open(`https://wa.me/${CONFIG.ownerPhone.join("").replace("+", "")}?text=${encodeURIComponent(`Hi CHURO, here are my renter assessment results (Result ID ${payload.resultId}). I'll attach the PDF.`)}`, "_blank", "noopener"); }; });
 }
 
 async function sendCopy(p, fp, sc) {

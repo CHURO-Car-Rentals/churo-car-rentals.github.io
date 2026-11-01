@@ -93,12 +93,12 @@ FACTS
 - Pick-up and return in Sarasota, FL 34234 (round trip). Delivery within 15 miles of 34234 costs $140.
 - Drive anywhere in Florida; cars are GPS-tracked and NOT allowed outside Florida. 200 miles per day included.
 - Cars are cleaned, sanitized and fully inspected before every rental; pre- and post-trip photos are taken each time.
-- To book: use the "Book now" link (it notifies the owner). Questions: tell them to tap "Call us" or "Text us" (never write out a phone number). Before the first rental every renter completes the renter assessment at renter-quiz/ (95% needed). Extensions: tell us before the rental ends.
+- To book: use the "Book now" link (it notifies the owner). Questions: tell them to tap "WhatsApp us" (preferred) or "Call us" (never write out a phone number). Before the first rental every renter completes the renter assessment at renter-quiz/ (95% needed). Extensions: tell us before the rental ends.
 - Rent-to-Own: rent 1 week first, then sign and notarize at MIDFLORIDA with the down payment and proof of insurance; weekly or bi-weekly payments, 12 months max, no monthly plans; customer handles maintenance; Uber/DoorDash/gig work ONLY with the owner's explicit written authorization (same as rentals); nothing illegal.
 
 RULES
 - Never invent prices, fees, numbers or policies. Don't quote any price not listed above; for exact prices or payments, point to the car tiles or the payment calculator.
-- If unsure, say so and suggest the Call us / Text us buttons. Never share anything about other customers.`;
+- If unsure, say so and suggest the WhatsApp us / Call us buttons. Never share anything about other customers.`;
   }
 
   /* =======================================================
@@ -297,12 +297,12 @@ RULES
     if (/carplay/.test(e.feature)) { // known: almost every car has it
       const has = car && (car.features || []).some((f) => /carplay/i.test(f));
       return { text: has ? `Yes! ✅ The **${C.carName(car)}** has **Apple CarPlay**.`
-        : car ? `Almost all of our cars have **Apple CarPlay**, but a couple don't. [💬 Text us](#text) and we'll confirm it for the **${C.carName(car)}**.`
-        : `${P.carplay.replace("Apple CarPlay", "**Apple CarPlay**")} [💬 Text us](#text) to check.`, cars: car ? [car] : null };
+        : car ? `Almost all of our cars have **Apple CarPlay**, but a couple don't. [💬 WhatsApp us](#wa) and we'll confirm it for the **${C.carName(car)}**.`
+        : `${P.carplay.replace("Apple CarPlay", "**Apple CarPlay**")} [💬 WhatsApp us](#wa) to check.`, cars: car ? [car] : null };
     }
     const f = (FEATURE_NAMES[e.feature] || e.feature).replace(/\bautomatic\b/, "an automatic transmission").replace(/^(manual|stick shift).*/, "a manual transmission");
     const known = car && car.features ? `\n\nWhat I can confirm for the **${C.carName(car)}**: ${car.features.join(", ")}.` : "";
-    return { text: `Good question. I don't have verified details about **${f}** ${car ? `on the **${C.carName(car)}**` : "for each car"}, and I'd rather not guess.${known}\n\n[💬 Text us](#text) and we'll confirm it for you right away.`, cars: car ? [car] : null };
+    return { text: `Good question. I don't have verified details about **${f}** ${car ? `on the **${C.carName(car)}**` : "for each car"}, and I'd rather not guess.${known}\n\n[💬 WhatsApp us](#wa) and we'll confirm it for you right away.`, cars: car ? [car] : null };
   }
 
   function recommend(e) {
@@ -328,20 +328,20 @@ RULES
     deposit: () => `${P.deposit}\n\nDeposit without proofs of address:\n${C.depositList().map((x) => `- ${x}`).join("\n")}`,
     about: () => `CHURO is a family-operated rental business in Sarasota. We've completed **${C.company.turoTrips} trips on Turo** with a **${C.company.rating}★ rating**, and now rent directly to you: no middlemen, no surprises. ⭐`,
     insurance: () => `**Rentals:** ask about coverage when you book.\n\n**Rent-to-Own:** ${P.rtoInsurance}`,
-    rideshare: () => `${P.rideshare} [💬 Text us](#text) to ask.`,
+    rideshare: () => `${P.rideshare} [💬 WhatsApp us](#wa) to ask.`,
     monthly: () => "We don't offer monthly payment plans. Rent-to-Own payments are **weekly or every two weeks**, as low as **$175/week** depending on the car (most cars have a $300/week minimum). Want me to work out a car for you?",
     whyweek: () => "Since there's **no credit check**, the one-week rental shows you can make payments on time. It also lets you get a feel for the car **before** committing. If you notice anything that needs fixing that week, tell us and we'll fix it **before** we sign at MIDFLORIDA.",
-    delivery: () => `${P.pickup} Pick-up details are confirmed when you book. Questions? [📞 Call us](#call) or [💬 Text us](#text).`,
+    delivery: () => `${P.pickup} Pick-up details are confirmed when you book. Questions? [💬 WhatsApp us](#wa) or [📞 Call us](#call).`,
     travel: () => `🗺️ ${P.travel} ${P.mileage}`,
     mileage: () => `${P.mileage} ${P.travel}`,
     clean: () => `✨ ${P.cleanliness}`,
-    howbook: () => `${P.booking.replace("Book now", "**Book now**").replace("Call us or Text us", "[📞 Call us](#call) or [💬 Text us](#text)")}\n\nFirst time renting with us? Complete the [renter assessment](#assessment) first.`,
+    howbook: () => `${P.booking.replace("Book now", "**Book now**").replace("WhatsApp us or call us", "[💬 WhatsApp us](#wa) or [📞 call us](#call)")}\n\nFirst time renting with us? Complete the [renter assessment](#assessment) first.`,
     oneway: () => P.oneWay,
     extend: () => P.extend,
     cancel: () => P.cancellation,
     issues: () => P.issues,
     payment: () => `We accept **${P.payment.replace(/\.$/, "").replace(/^C/, "c")}**. 💵 Rent-to-Own down payments are made at signing.`,
-    contact: () => `[📞 Call us](#call) or [💬 Text us](#text) for any questions, or use the **Contact us** form. When you're ready to book, use **Book now**. It notifies us right away.`,
+    contact: () => `[💬 WhatsApp us](#wa) or [📞 Call us](#call) for any questions, or use the **Contact us** form. When you're ready to book, use **Book now**. It notifies us right away.`,
     fleet: () => `Here's the fleet (weekly rentals are deeply discounted):\n${C.fleet.filter(C.rtoAvailable).map((c) => `- ${carLine(c)}`).join("\n")}${C.fleet.some((c) => c.status === "soon") ? `\n\nComing soon: ${C.fleet.filter((c) => c.status === "soon").map((c) => `**${C.carName(c)}** ($${c.weekly}/week)`).join(", ")}` : ""}\n\nPlus ${C.fleet.filter((c) => c.status === "rto").length} more cars currently being purchased through Rent-to-Own.`,
   };
 
@@ -472,7 +472,7 @@ RULES
     if (small) { res.text = R[small](); res.chips = DEFAULT_CHIPS; return res; }
 
     res.fallback = true;
-    res.text = `I'm not 100% sure about that one. 🤔 I can help with **rentals**, **Rent-to-Own** (no credit check), **buying with cash**, prices and requirements. For anything else, [📞 Call us](#call) or [💬 Text us](#text).`;
+    res.text = `I'm not 100% sure about that one. 🤔 I can help with **rentals**, **Rent-to-Own** (no credit check), **buying with cash**, prices and requirements. For anything else, [💬 WhatsApp us](#wa) or [📞 Call us](#call).`;
     res.chips = ["What cars are available?", "How does rent-to-own work?", "Cars for sale", "What do I need to rent?"];
     return res;
   }
@@ -706,6 +706,7 @@ RULES
     ui.input.value = "";
     autosize();
     history.push({ role: "user", content: text });
+    if (window.ChuroContact) window.ChuroContact.lastQuestion = text; // carried into the WhatsApp message
     addBubble("user", text);
     persist();
 
