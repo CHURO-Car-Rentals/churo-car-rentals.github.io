@@ -89,6 +89,7 @@ FACTS
 - To rent: valid Florida driver's license + 2 different recent proofs of address in your name (utility bill, paystub, bank statement). Insurance card optional. Age 21+.
 - Daily rental deposit: $200 with 2 proofs of address, otherwise up to $1,000 depending on the car; refunded minus tolls, citations, fees.
 - Payment: cash, Apple Pay, Venmo, Chime or Zelle. Do not mention or offer card payments.
+- Apple CarPlay: almost all cars have it (the Nissan Sentra does); a couple don't, so offer to confirm for a specific car. Best on gas: the 2013 Nissan Sentra SV, hands down.
 - Pick-up and return in Sarasota, FL 34234 (round trip). Delivery within 15 miles of 34234 costs $140.
 - Drive anywhere in Florida; cars are GPS-tracked and NOT allowed outside Florida. 200 miles per day included.
 - Cars are cleaned, sanitized and fully inspected before every rental; pre- and post-trip photos are taken each time.
@@ -129,7 +130,7 @@ RULES
     { id: "truck", re: /\btrucks?\b|pick-?ups?\b|\bhaul|\btow(ing)?\b|cargo van|u-?haul|mov(e|ing) (my )?(furniture|stuff|apartment|house|couch)/ },
     { id: "sports", re: /sports? ?cars?|sporty|fast (car|ride)|something fast|\bfast\b.*\bfun\b|\bcoupe|convertible|drop ?top|muscle car|race car|racing|supercar|exotic|lambo|ferrari|porsche|corvette|camaro|mustang|challenger|charger|\bspeed\b/ },
     { id: "luxury", re: /luxur|high[- ]end|premium|fancy|classy|upscale|wedding|\bprom\b|special occasion|impress|\bvip\b|leather|nicest car/ },
-    { id: "efficient", re: /good on gas|best on gas|gas mileage|fuel[- ]?(efficien|econom)|\bmpg\b|economical|efficient|save (on )?gas|gas saver|hybrid|less gas/ },
+    { id: "efficient", re: /good on gas|best on gas|gas mileage|fuel[- ]?(efficien|econom)|\bmpg\b|economical|efficient|save (on )?gas|gas saver|hybrid|less gas|least gas|lowest gas|cheapest (on|for) gas|uses? (the )?least|gas guzzl\w*|easy on gas/ },
     { id: "sunroof", re: /sun ?roof|moon ?roof|panoramic/ },
   ];
   const NOT_CARRIED = /\b(bmw|mercedes|benz|audi|lexus|porsche|ferrari|lamborghini|jeep|ford|chevy|chevrolet|dodge|toyota|honda|hyundai|mazda|subaru|volkswagen|vw|cadillac|infiniti|acura|range rover|land rover|gmc|chrysler|lincoln|volvo|genesis|mini cooper|camry|corolla|civic|accord|altima|wrangler|f-?150|tahoe|suburban|explorer|escalade|mustang|camaro|corvette|challenger|charger)\b/;
@@ -272,8 +273,9 @@ RULES
         return { text: `Our biggest vehicles seat **7** (Kia Sorentos with a third row). We don't have minivans or 8+ seat vehicles. For a bigger group, two cars works great, and weekly pricing makes it affordable:\n${listCars(cars.slice(0, 3))}`, cars: cars.slice(0, 3), chips: ["Price for 1 week", "What do I need to rent?"] };
       }
       case "efficient": {
-        const cars = best((c) => c.type === "Sedan", (a, b) => a.weekly - b.weekly).slice(0, 3);
-        return { text: `Our **sedans** use the least gas. ⛽ The most economical picks:\n${listCars(cars, (c) => c.blurb.split(".")[0].toLowerCase())}\n\nThe SUVs are roomier but use more fuel. (I don't have exact MPG figures, so text us if you need them.)`, cars, chips: ["Cheapest weekly rental?", "What do I need to rent?"] };
+        const champ = availCars().find((c) => (c.features || []).some((f) => /best on gas/i.test(f)));
+        const cars = [champ, ...best((c) => c.type === "Sedan" && c !== champ, (a, b) => a.weekly - b.weekly)].filter(Boolean).slice(0, 3);
+        return { text: `${champ ? `The **${C.carName(champ)}** is our best on gas, hands down. ⛽ It's also our most affordable car (**$${champ.weekly}/week**).` : "Our **sedans** use the least gas. ⛽"}\n\n${champ ? "Other economical sedans:" : "The most economical picks:"}\n${listCars(cars.slice(champ ? 1 : 0), (c) => c.blurb.split(".")[0].toLowerCase())}\n\nThe SUVs are roomier but use more fuel.`, cars, chips: ["Price for 1 week", "What do I need to rent?"] };
       }
       case "sunroof": {
         const cars = withFeature("sunroof");
@@ -292,6 +294,12 @@ RULES
   }
 
   function featureReply(e, car) {
+    if (/carplay/.test(e.feature)) { // known: almost every car has it
+      const has = car && (car.features || []).some((f) => /carplay/i.test(f));
+      return { text: has ? `Yes! ✅ The **${C.carName(car)}** has **Apple CarPlay**.`
+        : car ? `Almost all of our cars have **Apple CarPlay**, but a couple don't. [💬 Text us](#text) and we'll confirm it for the **${C.carName(car)}**.`
+        : `${P.carplay.replace("Apple CarPlay", "**Apple CarPlay**")} [💬 Text us](#text) to check.`, cars: car ? [car] : null };
+    }
     const f = (FEATURE_NAMES[e.feature] || e.feature).replace(/\bautomatic\b/, "an automatic transmission").replace(/^(manual|stick shift).*/, "a manual transmission");
     const known = car && car.features ? `\n\nWhat I can confirm for the **${C.carName(car)}**: ${car.features.join(", ")}.` : "";
     return { text: `Good question. I don't have verified details about **${f}** ${car ? `on the **${C.carName(car)}**` : "for each car"}, and I'd rather not guess.${known}\n\n[💬 Text us](#text) and we'll confirm it for you right away.`, cars: car ? [car] : null };

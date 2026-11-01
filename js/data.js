@@ -84,6 +84,7 @@ window.CHURO = {
     {
       id: "sentra-2013-sv", year: 2013, make: "Nissan", model: "Sentra", trim: "SV", color: "Gray",
       type: "Sedan", seats: 5, daily: 80, weekly: [289, 300], value: 5700, down: 600, status: "available", minWeekly: 175,
+      features: ["Apple CarPlay", "Best on gas in our fleet"],
       photos: ["assets/cars/sentra-2013-sv-1.jpg", "assets/cars/sentra-2013-sv-2.jpg", "assets/cars/sentra-2013-sv-3.jpg"],
       blurb: "Compact, efficient and budget-friendly. Our lowest weekly rate and lowest down payment.",
     },
@@ -139,6 +140,7 @@ window.CHURO = {
     cancellation: "Plans change — contact us as early as possible and we'll work with you.",
     issues: "If anything goes wrong during your rental, contact us right away and we'll resolve it as quickly as possible.",
     assessment: "Before your first rental, every renter completes a short online assessment (about 8 minutes, 20 real-life situations). It confirms you understand our requirements and the rental agreement. You need 95% to be approved, and you'll get a results PDF to send us.",
+    carplay: "Almost all of our cars have Apple CarPlay, including the Nissan Sentra. A couple don't, so ask us to confirm for the car you want.",
     rideshare: "Only with our written approval. Driving for Uber, Lyft, DoorDash or any other gig or delivery app requires our explicit written authorization first, on rentals and on Rent-to-Own. Ask us before you start. Illegal use is never allowed.",
     cleanliness: "Every car is cleaned and sanitized before each rental and fully inspected for defects. We take pre- and post-trip photos every time, so there's clear documentation when the car comes back.",
     cash: "Buy outright with cash: bring the full amount in cash, we sign the clean title over to you, and you take it to the DMV for your registration and license plate.",
