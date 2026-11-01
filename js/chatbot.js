@@ -123,6 +123,22 @@ RULES
     return { cars: top, exact: top.length === 1 && best > 3 };
   }
 
+  // What customers ask for that isn't a model name: answered honestly, with the closest real options.
+  const WISHES = [
+    { id: "van", re: /mini ?vans?|\bvans?\b|\b(8|9|10|11|12|eight|nine|ten)\s*(people|passengers?|seats?|seater|of us)\b/ },
+    { id: "truck", re: /\btrucks?\b|pick-?ups?\b|\bhaul|\btow(ing)?\b|cargo van|u-?haul|mov(e|ing) (my )?(furniture|stuff|apartment|house|couch)/ },
+    { id: "sports", re: /sports? ?cars?|sporty|fast (car|ride)|something fast|\bfast\b.*\bfun\b|\bcoupe|convertible|drop ?top|muscle car|race car|racing|supercar|exotic|lambo|ferrari|porsche|corvette|camaro|mustang|challenger|charger|\bspeed\b/ },
+    { id: "luxury", re: /luxur|high[- ]end|premium|fancy|classy|upscale|wedding|\bprom\b|special occasion|impress|\bvip\b|leather|nicest car/ },
+    { id: "efficient", re: /good on gas|best on gas|gas mileage|fuel[- ]?(efficien|econom)|\bmpg\b|economical|efficient|save (on )?gas|gas saver|hybrid|less gas/ },
+    { id: "sunroof", re: /sun ?roof|moon ?roof|panoramic/ },
+  ];
+  const NOT_CARRIED = /\b(bmw|mercedes|benz|audi|lexus|porsche|ferrari|lamborghini|jeep|ford|chevy|chevrolet|dodge|toyota|honda|hyundai|mazda|subaru|volkswagen|vw|cadillac|infiniti|acura|range rover|land rover|gmc|chrysler|lincoln|volvo|genesis|mini cooper|camry|corolla|civic|accord|altima|wrangler|f-?150|tahoe|suburban|explorer|escalade|mustang|camaro|corvette|challenger|charger)\b/;
+  const BRAND_NAMES = { bmw: "BMW", vw: "VW", gmc: "GMC", benz: "Mercedes", "f-150": "F-150", f150: "F-150", chevy: "Chevy" };
+  const brandName = (b) => BRAND_NAMES[b] || b.replace(/\b\w/g, (m) => m.toUpperCase());
+  const FEATURE_NAMES = { "apple carplay": "Apple CarPlay", carplay: "Apple CarPlay", "android auto": "Android Auto", awd: "all-wheel drive", "4wd": "four-wheel drive", usb: "USB ports", aux: "an AUX input" };
+  // Details we don't have verified for every car: never guess, offer to confirm.
+  const FEATURE_Q = /apple car ?play|carplay|android auto|bluetooth|backup camera|rear ?(view )?camera|heated seats?|cooled seats?|\bautomatic\b|manual (transmission)?|stick shift|\bawd\b|\b4wd\b|all[- ]wheel|four[- ]wheel|window tint|tinted|\busb\b|\baux\b|cruise control|remote start|keyless|push[- ]?(button )?start|navigation|nav system/;
+
   function analyze(text, ctx) {
     const t = " " + text.toLowerCase().replace(/[’']/g, "'") + " ";
     const e = { raw: t };
@@ -150,6 +166,10 @@ RULES
     else if (/\bsedans?\b|small car|compact/.test(t)) e.type = "Sedan";
     if ((m = t.match(/(?:under|below|less than|max(?:imum)?|budget(?: of| is)?|up to|afford)\s*\$?\s*(\d{2,5})/))) e.budget = +m[1];
     e.cheap = /cheap|cheapest|lowest|budget|afford|least expensive|inexpensive/.test(t);
+    e.wish = WISHES.find((w) => w.re.test(t))?.id || null;
+    e.brands = [...new Set((t.match(new RegExp(NOT_CARRIED.source, "g")) || []).map(brandName))];
+    e.brand = e.brands[0] || null;
+    e.feature = (t.match(FEATURE_Q) || [])[0] || null;
 
     const scored = INTENTS.map((it) => ({ it, score: it.kw.reduce((s, r) => s + (r.test(t) ? 1 : 0), 0) }))
       .filter((x) => x.score > 0)
@@ -224,6 +244,59 @@ RULES
     return { text, cars: [car], action: () => window.ChuroApp && window.ChuroApp.selectRto(car.id, { months, frequency: freq }) };
   }
 
+  const best = (filter, sort) => availCars().filter(filter).sort(sort || ((a, b) => b.year - a.year));
+  const withFeature = (f) => best((c) => (c.features || []).some((x) => x.toLowerCase().includes(f)));
+  const listCars = (cars, why) => cars.map((c, i) => `${i + 1}. ${carLine(c)}${why ? ` · ${why(c)}` : ""}`).join("\n");
+  const soonCars = () => C.fleet.filter((c) => c.status === "soon");
+
+  /** Honest answers for things we don't carry, with the closest real options. */
+  function wishReply(e) {
+    const soon = soonCars();
+    const sporty = () => {
+      const picks = [...best((c) => c.type === "Sedan").slice(0, 1), ...withFeature("sunroof").slice(0, 1)];
+      return `We don't have sports cars or convertibles. 🏁 Our fleet is reliable Kia SUVs and sedans, picked for comfort and great weekly prices. The closest to sporty:\n${listCars(picks, (c) => (c.features ? "top trim, " + c.features.slice(1, 3).join(", ").toLowerCase() : c.blurb.split(".")[0].toLowerCase()))}` +
+        (soon.length ? `\n\n⚡ Coming soon: the **${C.carName(soon[0])}** (${soon[0].color}), ${soon[0].blurb.charAt(0).toLowerCase() + soon[0].blurb.slice(1)}` : "");
+    };
+    switch (e.wish) {
+      case "sports": return { text: sporty(), cars: [...best((c) => c.type === "Sedan").slice(0, 1), ...withFeature("sunroof").slice(0, 1)], chips: ["Price for a weekend", soon.length ? `Tell me about the ${soon[0].make}` : "What cars are available?", "What do I need to rent?"] };
+      case "luxury": {
+        const cars = [...withFeature("leather"), ...best((c) => c.year >= 2022)].filter((c, i, a) => a.indexOf(c) === i).slice(0, 3);
+        return { text: `For something special, these are our most upscale rides:\n${listCars(cars, (c) => (c.features ? c.features.filter((f) => /leather|sunroof|memory/i.test(f)).join(", ").toLowerCase() : "our newest model"))}\n\nWe don't carry luxury brands like BMW or Mercedes, but the SX trims come loaded: leather, panoramic sunroof and memory seats.`, cars, chips: ["Price for a weekend", "What do I need to rent?"] };
+      }
+      case "truck": {
+        const cars = best((c) => c.seats >= 7).slice(0, 2);
+        return { text: `We don't rent pickup trucks or cargo vans, and our cars can't be used for towing. 🚫🚚 For smaller loads, our 7-seat Sorentos have a third row that folds flat for cargo space:\n${listCars(cars)}\n\nFor a full move, a moving truck rental is the safer choice.`, cars, chips: ["Need a 7-seater SUV", "Price for 1 week"] };
+      }
+      case "van": {
+        const cars = best((c) => c.seats >= 7);
+        return { text: `Our biggest vehicles seat **7** (Kia Sorentos with a third row). We don't have minivans or 8+ seat vehicles. For a bigger group, two cars works great, and weekly pricing makes it affordable:\n${listCars(cars.slice(0, 3))}`, cars: cars.slice(0, 3), chips: ["Price for 1 week", "What do I need to rent?"] };
+      }
+      case "efficient": {
+        const cars = best((c) => c.type === "Sedan", (a, b) => a.weekly - b.weekly).slice(0, 3);
+        return { text: `Our **sedans** use the least gas. ⛽ The most economical picks:\n${listCars(cars, (c) => c.blurb.split(".")[0].toLowerCase())}\n\nThe SUVs are roomier but use more fuel. (I don't have exact MPG figures, so text us if you need them.)`, cars, chips: ["Cheapest weekly rental?", "What do I need to rent?"] };
+      }
+      case "sunroof": {
+        const cars = withFeature("sunroof");
+        return cars.length ? { text: `Yes! ☀️ These have a **panoramic sunroof**:\n${listCars(cars, (c) => c.features.filter((f) => !/sunroof/i.test(f)).slice(0, 2).join(", ").toLowerCase())}`, cars } : null;
+      }
+    }
+    return null;
+  }
+
+  function brandReply(e) {
+    const list = e.brands.length > 1 ? e.brands.slice(0, -1).join(", ") + " or " + e.brands.at(-1) : e.brand, truckish = /jeep|ford|f-?150|gmc|chevy|chevrolet|tahoe|suburban|explorer|escalade|wrangler|range rover|land rover/i.test(e.brand);
+    const sporty = /porsche|ferrari|lamborghini|corvette|camaro|mustang|challenger|charger/i.test(e.brand);
+    if (sporty) { const r = wishReply({ ...e, wish: "sports" }); r.text = r.text.replace("We don't have sports cars or convertibles.", `We don't have a ${list} or other sports cars.`); return r; }
+    const cars = best((c) => (truckish ? c.type === "SUV" : true)).slice(0, 3);
+    return { text: `We don't carry ${list}. Our fleet is **Kia and Nissan**${soonCars().length ? ` (plus a **Tesla** coming soon)` : ""}. ${truckish ? "If you like the space and height of an SUV, these are a great fit:" : "Here's what we'd suggest instead:"}\n${listCars(cars)}`, cars, chips: ["What cars are available?", "Need a 7-seater SUV"] };
+  }
+
+  function featureReply(e, car) {
+    const f = (FEATURE_NAMES[e.feature] || e.feature).replace(/\bautomatic\b/, "an automatic transmission").replace(/^(manual|stick shift).*/, "a manual transmission");
+    const known = car && car.features ? `\n\nWhat I can confirm for the **${C.carName(car)}**: ${car.features.join(", ")}.` : "";
+    return { text: `Good question. I don't have verified details about **${f}** ${car ? `on the **${C.carName(car)}**` : "for each car"}, and I'd rather not guess.${known}\n\n[💬 Text us](#text) and we'll confirm it for you right away.`, cars: car ? [car] : null };
+  }
+
   function recommend(e) {
     let list = availCars();
     if (e.type) list = list.filter((c) => c.type === e.type);
@@ -259,7 +332,7 @@ RULES
     extend: () => P.extend,
     cancel: () => P.cancellation,
     issues: () => P.issues,
-    payment: () => P.payment + " Rent-to-Own down payments are made at signing.",
+    payment: () => `We accept **${P.payment.replace(/\.$/, "").replace(/^C/, "c")}**. 💵 Rent-to-Own down payments are made at signing.`,
     contact: () => `[📞 Call us](#call) or [💬 Text us](#text) for any questions, or use the **Contact us** form. When you're ready to book, use **Book now**. It notifies us right away.`,
     fleet: () => `Here's the fleet (weekly rentals are deeply discounted):\n${C.fleet.filter(C.rtoAvailable).map((c) => `- ${carLine(c)}`).join("\n")}${C.fleet.some((c) => c.status === "soon") ? `\n\nComing soon: ${C.fleet.filter((c) => c.status === "soon").map((c) => `**${C.carName(c)}** ($${c.weekly}/week)`).join(", ")}` : ""}\n\nPlus ${C.fleet.filter((c) => c.status === "rto").length} more cars currently being purchased through Rent-to-Own.`,
   };
@@ -307,6 +380,15 @@ RULES
       res.text = `⚡ The **${C.carName(car)}** (${car.color}) is **coming soon**! It'll rent for **$${car.weekly}/week** or $${car.daily}/day. ${car.blurb}${car.features ? `\n\nFeatures: ${car.features.join(", ")}.` : ""}\n\nIt isn't bookable yet. Use the **Contact us** form to be first in line. Rent-to-Own and purchase details will be announced when it arrives.`;
       res.cars = [car];
       return out(res);
+    }
+
+    // ---- details we can't verify (CarPlay, transmission…): never guess
+    if (e.feature && !has("price") && !has("rto") && !has("cash")) { Object.assign(res, featureReply(e, car)); return out(res); }
+
+    // ---- wishes: sports car, luxury, truck, van, fuel economy, sunroof; brands we don't carry
+    if (!car && (e.wish || e.brand) && !has("documents") && !has("payment") && !has("insurance")) {
+      const r = e.brand && (!e.wish || e.wish === "sports") ? brandReply(e) : wishReply(e) || (e.brand ? brandReply(e) : null);
+      if (r) { Object.assign(res, r); return out(res); }
     }
 
     // ---- Rent-to-Own for a specific car (or payment questions with car context)
