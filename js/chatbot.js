@@ -188,6 +188,7 @@ RULES
     { id: "rideshare", priority: 1, kw: [/uber|lyft|doordash|door dash|instacart|grubhub|gig|rideshare|ride share|deliver(y|ies) (job|work|app)/] },
     { id: "monthly", priority: 1, kw: [/monthly|per month|a month|each month/] },
     { id: "whyweek", priority: 1, kw: [/why .*(week|rent first)|have to rent|first week|try (it|the car) (first|out)/] },
+    { id: "turo", priority: 0, kw: [/(book|rent|reserve)\w*\b.{0,20}\b(on|through|via|from) turo|turo (booking|account|profile|page|link|listing)|use turo|find you on turo|turo instead|are you on turo|link to (your )?turo/] },
     { id: "about", priority: 1, kw: [/how many trips|trips|reviews?|rating|stars|turo|who (are|is) (you|churo)|about (you|churo)|trust/] },
     { id: "deposit", priority: 1, kw: [/deposit|security|hold\b|refundable/] },
     { id: "maintenance", priority: 1, kw: [/maintenance|oil change|repairs?|tires?|who fixes/] },
@@ -326,7 +327,8 @@ RULES
     age: () => P.age,
     documents: () => `**To rent, you'll need:**\n- A valid **Florida** driver's license\n- Proof of address: at least **2 different recent documents in your name** (utility bill: electricity, water, internet or phone; paystub; or bank statement)\n- Your auto insurance card (optional)\n\n**Deposit (daily rentals):** just **$200** with 2 proofs of address; without them it's up to **$1,000**, depending on the car. Refunded at the end minus citations, tolls or fees.\n\n**Payment:** ${P.payment}\n\nFor Rent-to-Own you'll also need proof of insurance at signing.`,
     deposit: () => `${P.deposit}\n\nDeposit without proofs of address:\n${C.depositList().map((x) => `- ${x}`).join("\n")}`,
-    about: () => `CHURO is a family-operated rental business in Sarasota. We've completed **${C.company.turoTrips} trips on Turo** with a **${C.company.rating}★ rating**, and now rent directly to you: no middlemen, no surprises. ⭐`,
+    about: () => `CHURO is a family-operated rental business in Sarasota. We've completed **${C.company.turoTrips} trips on Turo** with a **${C.company.rating}★ rating**, and now rent directly to you: no middlemen, no surprises. ⭐\n\n[⭐ See our Turo profile and reviews](${C.company.turoUrl})`,
+    turo: () => `${P.turo} [⭐ Our Turo profile](${C.company.turoUrl})`,
     insurance: () => `**Rentals:** ask about coverage when you book.\n\n**Rent-to-Own:** ${P.rtoInsurance}`,
     rideshare: () => `${P.rideshare} [💬 WhatsApp us](#wa) to ask.`,
     monthly: () => "We don't offer monthly payment plans. Rent-to-Own payments are **weekly or every two weeks**, as low as **$175/week** depending on the car (most cars have a $300/week minimum). Want me to work out a car for you?",
@@ -357,7 +359,7 @@ RULES
     const res = { cars: null, chips: null, action: null, facts: [] };
     const out = (r) => { if (small === "greet" && r.text && top) r.text = "Hi there! 👋 " + r.text; if (r.text) r.facts.push(r.text); return r; };
 
-    const INFO = ["travel", "mileage", "clean", "howbook", "delivery", "about", "deposit", "whyweek", "rideshare", "monthly", "maintenance", "insurance", "documents", "payment", "signing", "age", "oneway", "extend", "cancel", "issues", "contact"];
+    const INFO = ["turo", "travel", "mileage", "clean", "howbook", "delivery", "about", "deposit", "whyweek", "rideshare", "monthly", "maintenance", "insurance", "documents", "payment", "signing", "age", "oneway", "extend", "cancel", "issues", "contact"];
     const insFollowUp = /what if|instead|use (your|my|mine|yours)|with (your|my) insurance/.test(e.raw) && ctx.car && C.rtoAvailable(C.byId(ctx.car));
     if (INFO.includes(top) && !insFollowUp && !(e.cars.length === 1 && (has("rto") || has("cash") || has("price")))) {
       res.text = R[top](e, ctx);

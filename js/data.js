@@ -19,6 +19,7 @@ window.CHURO = {
     tagline: "Fast. Easy. Available!",
     city: "Sarasota, FL 34234",
     turoTrips: "501+",
+    turoUrl: "https://turo.com/us/en/host/6152313",
     rating: "4.9",
     // Booking + payment (Stripe is connected inside this Fillout form)
     bookingUrl: "https://forms.fillout.com/t/pHEsqVXHKaus",
@@ -140,6 +141,7 @@ window.CHURO = {
     cancellation: "Plans change — contact us as early as possible and we'll work with you.",
     issues: "If anything goes wrong during your rental, contact us right away and we'll resolve it as quickly as possible.",
     assessment: "Before your first rental, every renter completes a short online assessment (about 8 minutes, 20 real-life situations). It confirms you understand our requirements and the rental agreement. You need 95% to be approved, and you'll get a results PDF to send us.",
+    turo: "Yes. You can also book our cars on Turo, where you'll find our 501+ trips and 4.9-star reviews. Booking directly here works too, and it notifies us right away.",
     carplay: "Almost all of our cars have Apple CarPlay, including the Nissan Sentra. A couple don't, so ask us to confirm for the car you want.",
     rideshare: "Only with our written approval. Driving for Uber, Lyft, DoorDash or any other gig or delivery app requires our explicit written authorization first, on rentals and on Rent-to-Own. Ask us before you start. Illegal use is never allowed.",
     cleanliness: "Every car is cleaned and sanitized before each rental and fully inspected for defects. We take pre- and post-trip photos every time, so there's clear documentation when the car comes back.",

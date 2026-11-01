@@ -320,10 +320,11 @@
     ["Are the cars clean and inspected?", P.cleanliness],
     ["Do I need to do anything before renting?", P.assessment, ["Take the renter assessment →", "renter-quiz/"]],
     ["How do I book?", P.booking],
+    ["Can I book through Turo?", P.turo, ["See our Turo profile ↗", C.company.turoUrl]],
     ["Can I do a one-way rental?", P.oneWay],
     ["How do I extend my rental?", P.extend],
   ];
-  $("#faqList").innerHTML = faq.map(([q, a, link], i) => `<details ${i === 0 ? "open" : ""}><summary>${esc(q)}</summary><p>${esc(a)}${link ? ` <a class="faq__link" href="${link[1]}">${esc(link[0])}</a>` : ""}</p></details>`).join("");
+  $("#faqList").innerHTML = faq.map(([q, a, link], i) => `<details ${i === 0 ? "open" : ""}><summary>${esc(q)}</summary><p>${esc(a)}${link ? ` <a class="faq__link" href="${link[1]}"${/^https?:/.test(link[1]) ? ' target="_blank" rel="noopener"' : ""}>${esc(link[0])}</a>` : ""}</p></details>`).join("");
 
   /* ---------- misc ---------- */
   $("#year").textContent = new Date().getFullYear();
