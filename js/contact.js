@@ -12,12 +12,20 @@
     lastQuestion: "", // set by the chatbot so the WhatsApp message carries the customer's question
     whatsapp: (body) => {
       const text = body || (window.ChuroContact.lastQuestion ? `${HELLO}\n\n${window.ChuroContact.lastQuestion}` : HELLO);
+      window.SiteTrack && SiteTrack.event("wa", window.ChuroContact.lastQuestion ? "from chat" : "");
       window.open(`https://wa.me/${num().replace("+", "")}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
     },
-    call: () => { location.href = "tel:" + num(); },
-    text: (body) => { location.href = "sms:" + num() + (body ? (/iPhone|iPad|Mac/.test(navigator.userAgent) ? "&" : "?") + "body=" + encodeURIComponent(body) : ""); },
+    call: () => { window.SiteTrack && SiteTrack.event("call"); location.href = "tel:" + num(); },
+    text: (body) => { window.SiteTrack && SiteTrack.event("text"); location.href = "sms:" + num() + (body ? (/iPhone|iPad|Mac/.test(navigator.userAgent) ? "&" : "?") + "body=" + encodeURIComponent(body) : ""); },
   };
   document.addEventListener("click", function (e) {
+    // Book (per car) and Turo clicks, for the private dashboard
+    const out = e.target.closest('a[href*="forms.fillout.com"], a[href*="turo.com"]');
+    if (out && window.SiteTrack) {
+      const card = out.closest(".car"), name = card && card.querySelector(".car__name");
+      if (/turo\.com/.test(out.href)) SiteTrack.event("turo");
+      else SiteTrack.event("book", name ? name.firstChild.textContent.trim() : "");
+    }
     if (e.target.closest('a[href="#assessment"]')) { e.preventDefault(); location.href = "renter-quiz/"; return; }
     const el = e.target.closest('[data-contact], a[href="#wa"], a[href="#call"], a[href="#text"]');
     if (!el) return;

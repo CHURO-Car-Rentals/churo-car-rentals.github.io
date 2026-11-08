@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <title>CHURO</title>
+  <link rel="icon" href="../favicon.ico" />
+  <link rel="stylesheet" href="pit.css?v=202611081222" />
+  <style>
+    :root { --brand: #1668e3; --brand-ink: #ffffff; --brand-dark: #2cc5e8; --brand-ink-dark: #032a36;
+      --lock-accent: #2cc5e8; --lock-accent-ink: #032a36; --lock-glow: #0b3a5c; }
+    .lock { background: radial-gradient(circle at 50% 30%, var(--lock-glow), #071a33 62%); }
+  </style>
+</head>
+<body>
+  <main class="lock" id="lock">
+    <form class="lock__card" id="lockForm" autocomplete="on">
+      <img class="lock__logo" src="../logo.jpg" alt="CHURO" />
+      <div class="lock__ok" aria-live="polite"><i aria-hidden="true">✓</i><span id="okText" data-t="unlocked"></span></div>
+      <div class="lock__fields">
+      <label class="lock__label" for="key" data-t="passcode"></label>
+      <input id="key" name="password" type="password" autocomplete="current-password" required minlength="8" />
+      <label class="lock__remember"><input type="checkbox" id="remember" checked /> <span data-t="remember"></span></label>
+      <button type="submit" class="btn btn--gold" id="unlock" data-t="unlock"></button>
+      <p class="lock__msg" id="lockMsg" role="alert"></p>
+      </div>
+    </form>
+  </main>
+
+  <div class="app" id="app" hidden>
+    <header class="bar">
+      <div class="bar__brand"><img src="../logo.jpg" alt="CHURO" style="height:40px;border-radius:8px" /><span data-t="title"></span></div>
+      <div class="bar__tools">
+        <div class="seg seg--lang" role="group" aria-label="Language" id="langSeg" hidden></div>
+        <div class="seg" role="group" aria-label="Date range" id="range"></div>
+        <button type="button" class="btn btn--ghost" id="refresh" data-t="refresh"></button>
+        <a class="btn btn--ghost" id="sheetLink" target="_blank" rel="noopener" data-t="openSheet"></a>
+        <button type="button" class="btn btn--ghost" id="signOut" data-t="signOut"></button>
+      </div>
+    </header>
+    <p class="demo" id="demoNote" hidden data-t="demo"></p>
+
+    <section class="tiles" id="tiles" aria-label="Key numbers"></section>
+
+    <section class="panel" id="records">
+      <div class="panel__head">
+        <h2 data-t="recTitle"></h2>
+        <div class="panel__tools">
+          <div class="seg" role="group" id="recFilter"></div>
+          <input type="search" id="recSearch" data-tp="search" />
+        </div>
+      </div>
+      <div class="recs" id="recs"></div>
+    </section>
+
+    <section class="charts">
+      <article class="panel chart chart--wide">
+        <h2 data-t="visitorsPerDay"></h2>
+        <p class="sub" id="visitorsSub"></p>
+        <div class="line" id="lineChart"></div>
+        <details class="tableview"><summary data-t="showTable"></summary><div id="lineTable"></div></details>
+      </article>
+      <div id="barCharts"></div>
+    </section>
+
+    <section class="panel" id="chat">
+      <div class="panel__head">
+        <h2 data-t="chatTitle"></h2>
+        <label class="check"><input type="checkbox" id="onlyMissed" /> <span data-t="onlyMissed"></span></label>
+      </div>
+      <ul class="qs" id="qs"></ul>
+    </section>
+
+    <footer class="foot" data-t="footer"></footer>
+  </div>
+
+  <div class="tip" id="tip" role="tooltip" hidden></div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="strings.js?v=202611081222"></script>
+  <script src="spec.js?v=202611081222"></script>
+  <script src="dash.js?v=202611081222"></script>
+</body>
+</html>

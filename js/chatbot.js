@@ -713,6 +713,7 @@ RULES
     persist();
 
     const local = builtinReply(text, ctx);
+    if (window.SiteTrack) SiteTrack.event(local.fallback ? "chat_miss" : "chat_q", text);
     const engineId = activeEngine();
     const t = typing();
     let reply = "";
@@ -807,6 +808,7 @@ RULES
   });
 
   function open() {
+    if (ui.chat.hidden && window.SiteTrack) SiteTrack.event("chat_open");
     ui.chat.hidden = false;
     ui.launcher.setAttribute("aria-expanded", "true");
     ui.badge.hidden = true;

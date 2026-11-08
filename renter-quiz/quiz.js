@@ -1,8 +1,8 @@
 // Renter assessment: rules -> renter details -> 20 scenarios (3 fixed + 17 random, answers shuffled) ->
 // attestation + signature -> score -> results PDF (with an embedded, fingerprinted copy of every answer).
-import CONFIG from "./config.js?v=202611011231";
-import { BANK, byId, score, fingerprint, pack } from "./common.js?v=202611011231";
-import { checkLicense, STATES, FLHSMV_CHECK } from "./license.js?v=202611011231";
+import CONFIG from "./config.js?v=202611081222";
+import { BANK, byId, score, fingerprint, pack } from "./common.js?v=202611081222";
+import { checkLicense, STATES, FLHSMV_CHECK } from "./license.js?v=202611081222";
 
 const PDFLIB = "https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.esm.min.js";
 const app = document.getElementById("app"), bar = document.getElementById("progress");
@@ -94,6 +94,7 @@ function info() {
     if (c.flags.length && confirmedFlags !== c.flags.join("|")) { msg.querySelector(".note")?.scrollIntoView({ block: "center", behavior: "smooth" }); return; }
     S.renter = { name: d.name.trim().replace(/\s+/g, " "), dob: d.dob, dl: c.normalized, dlState: d.dlState === "Other / international" ? "Other" : d.dlState, phone: d.phone.trim(), email: d.email.trim(), dlFlags: c.flags };
     S.step = "q"; S.i = 0; S.started = Date.now(); save(); render();
+    window.SiteTrack?.event("quiz_start");
   };
 }
 
@@ -155,6 +156,14 @@ async function result() {
   const fast = answers.filter((x) => x.ms < CONFIG.fastSeconds * 1000).length;
   const payload = { v: 1, resultId: S.id, renter: S.renter, typedName: S.typed, started: new Date(S.started).toISOString(), finished: new Date(S.finished).toISOString(), seconds: Math.round((S.finished - S.started) / 1000), attempt: S.attempt, device: navigator.userAgent, bank: BANK.salt.slice(0, 8), answers, score: { right: sc.right, total: sc.total, pct: sc.pct, pass: sc.pass }, fastAnswers: fast };
   const fp = await fingerprint(payload);
+  if (!S.logged && window.SiteTrack) {                                   // one row per attempt in the owner's Google Sheet
+    const r = S.renter;
+    SiteTrack.record("assessment", { resultId: S.id, name: r.name, phone: r.phone, email: r.email, dob: r.dob, dlState: r.dlState, dl: r.dl,
+      dlFlags: (r.dlFlags || []).join ? r.dlFlags.join("; ") : String(r.dlFlags || ""), pct: sc.pct, right: sc.right, total: sc.total, pass: sc.pass,
+      attempt: S.attempt, seconds: payload.seconds, fast });
+    SiteTrack.event(sc.pass ? "quiz_pass" : "quiz_fail", sc.pct);
+    S.logged = true; save();
+  }
   const missed = [...new Set(answers.filter((_, i) => !sc.marks[i]).map((x) => byId[x.q].topic))];
   app.innerHTML = `<div class="card ${sc.pass ? "pass" : "fail"}"><div class="score"><div class="score__ring" style="--p:${sc.pct}"><span>${sc.pct}%</span></div><span class="badge">${sc.pass ? "PASSED" : "NOT PASSED"}</span>
     <p>${sc.right} of ${sc.total} correct · ${BANK.pass}% required</p></div>
