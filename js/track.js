@@ -3,7 +3,7 @@
 // Devices that signed in to the dashboard are skipped, so the owner's own visits don't count.
 (function () {
   const SET = {
-    url: "",                                                                 // Apps Script web app URL (…/exec), see apps-script/SETUP.md
+    url: "https://script.google.com/macros/s/AKfycbyXd0SA0f1Xag4VpuXvwtqu_uaA7fZM5IvYLbz630i8418bHfdhkUx0iRyGqQYi78Al/exec",                                                                 // Apps Script web app URL (…/exec), see apps-script/SETUP.md
     pit: new URL("pit/", document.currentScript.src.replace(/js\/track\.js.*$/, "")).href,
     countVisit: !/renter-quiz/.test(location.pathname),                      // the assessment counts its own steps
   };

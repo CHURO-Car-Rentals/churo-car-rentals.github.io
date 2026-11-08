@@ -1,6 +1,6 @@
 // CHURO dashboard: what the shared engine (dash.js) shows for this site.
 window.PIT = {
-  url: "",                                                                   // Apps Script web app URL (…/exec), same as js/track.js
+  url: "https://script.google.com/macros/s/AKfycbyXd0SA0f1Xag4VpuXvwtqu_uaA7fZM5IvYLbz630i8418bHfdhkUx0iRyGqQYi78Al/exec",                                                                   // Apps Script web app URL (…/exec), same as js/track.js
   langs: ["en"],
   phoneCountry: { len: 10, code: "1" },
   t: pitText({ en: { title: "CHURO dashboard", recTitle: "Renter assessments", search: "Search name, phone, license, result ID…" } }),
