@@ -1,6 +1,7 @@
 // Private dashboard engine (shared by CHURO and TP & FILS). Everything site-specific lives in spec.js (window.PIT).
 // Reads the Google Sheet through the Apps Script web app; every request carries the passcode. ?demo previews sample data.
 (function () {
+  if (window.top !== window.self) { document.documentElement.innerHTML = ""; return; }   // never run inside someone else's frame
   const P = window.PIT, $ = (s) => document.querySelector(s);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const demo = new URLSearchParams(location.search).has("demo");

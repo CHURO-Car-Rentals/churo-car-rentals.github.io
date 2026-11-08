@@ -22,7 +22,7 @@
     ollamaUrl: "http://localhost:11434",
     ollamaModel: "llama3.2",
     webllmModel: "Llama-3.2-1B-Instruct-q4f16_1-MLC",
-    webllmCdn: "https://esm.run/@mlc-ai/web-llm",
+    webllmCdn: "https://esm.run/@mlc-ai/web-llm@0.2.86",   // pinned: an unpinned import would run whatever is published next
     maxHistory: 4,
     llmTimeoutMs: 25000, // customers never wait longer than this; the built-in answer is shown instead
   };

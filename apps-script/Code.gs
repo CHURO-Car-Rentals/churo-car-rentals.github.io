@@ -83,6 +83,7 @@ function saveRecord(d) {
   const problem = REC.validate(d);
   if (problem) return { ok: false, error: problem };
   if (!allow("rec:" + (clean(d.visitor, 20) || clean(d.phone, 30) || "anon"), 6, 3600)) return { ok: false, error: "slow down" };
+  if (!allow("rec:all", 60, 3600)) return { ok: false, error: "slow down" };   // site-wide cap: a spammer can fake visitor IDs
   const tz = SpreadsheetApp.getActive().getSpreadsheetTimeZone(), now = new Date();
   const out = REC.build(d, now, tz);
   if (REC.clientId && findRow(out.id)) return { ok: true, id: out.id, duplicate: true };   // same result sent twice
@@ -95,6 +96,7 @@ function saveEvent(d) {
   const type = String(d.type || "");
   if (SITE.events.indexOf(type) < 0) return { ok: false };
   if (!allow("ev:" + (clean(d.visitor, 20) || "anon"), 80, 600)) return { ok: false, error: "slow down" };
+  if (!allow("ev:all", 2000, 3600)) return { ok: false, error: "slow down" };   // site-wide cap keeps the Sheet from being flooded
   const row = [new Date(), type, clean(d.detail, 300), clean(d.visitor, 20), clean(d.session, 20), clean(d.source, 30) || "direct",
     clean(d.ref, 80), clean(d.device, 10), clean(d.page, 60)];
   withLock(() => sheet(EVENTS_TAB).appendRow(row.map(safeCell)));

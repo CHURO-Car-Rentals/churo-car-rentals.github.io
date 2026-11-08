@@ -34,7 +34,8 @@
   };
 
   // one "visit" per browsing session
-  if (SET.countVisit !== false) {
+  // only mark the visit as counted once it was really sent (not while unconnected or on a signed-in device)
+  if (SET.countVisit !== false && SET.url && !skip) {
     try { if (!sessionStorage.getItem("pit.seen")) { sessionStorage.setItem("pit.seen", "1"); SiteTrack.event("visit", SET.visitDetail ? SET.visitDetail() : ""); } }
     catch { SiteTrack.event("visit"); }
   }
