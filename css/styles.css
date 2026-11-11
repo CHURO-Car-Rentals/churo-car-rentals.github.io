@@ -660,6 +660,16 @@ body, .section--tint, .car, .sale-card, .chip { transition: background-color 0.4
 .fleet, .sale { display: flex; flex-wrap: wrap; }
 .fleet > .car { flex: 1 1 320px; }
 .sale > .sale-card { flex: 1 1 280px; }
-.fleet .car__media { aspect-ratio: auto; height: clamp(230px, 24vw, 290px); }
-.sale .sale-card img { aspect-ratio: auto; height: clamp(170px, 16vw, 200px); }
+/* Cards rearrange themselves when their row makes them narrow (container queries) */
+.fleet > .car, .sale > .sale-card { container-type: inline-size; }
+@container (max-width: 360px) {
+  .car__top { flex-direction: column; align-items: flex-start; gap: 0.35rem; }
+  .car__price { text-align: left; display: flex; align-items: baseline; flex-wrap: wrap; column-gap: 0.5rem; }
+  .car__price .daily { display: inline; }
+  .car__actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .car__actions > :nth-child(3):last-child, .car__actions > :only-child { grid-column: 1 / -1; }
+  .car__actions .btn { white-space: nowrap; padding-inline: 0.6rem; }
+  .sale-card__actions { flex-wrap: wrap; }
+  .sale-card__actions .btn { flex: 1 1 100%; }
+}
 .fleet > .empty { flex: 1 1 100%; }
