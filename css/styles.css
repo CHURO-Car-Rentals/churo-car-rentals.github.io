@@ -609,34 +609,65 @@ legend { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; }
 .turo-link:hover { text-decoration: underline; }
 
 /* =========================================================
-   Color themes (js/theme.js). Classic = the :root colors above.
+   Color themes (js/theme.js) + dynamic background.
+   Every theme keeps CHURO's navy and teal/cyan; the time of day
+   shows in the background light, not in the brand colors.
    ========================================================= */
-html[data-theme="sunrise"] {      /* Siesta Key morning: warm cream, coral, amber */
-  --paper: #fff8f1; --tint: #ffeedd; --white: #ffffff;
-  --accent: #ffa94d; --accent-ink: #3d1c00; --blue: #e0582b;
-  --ink: #0f1d3a; --ink-2: #1a2b4f; --ink-3: #283d66;
+:root {                               /* Classic: today's look with a soft ocean glow */
+  --sky-1: rgba(44, 197, 232, 0.16); --sky-2: rgba(22, 104, 227, 0.10); --sky-3: rgba(44, 197, 232, 0.10);
+  --hero-glow: rgba(44, 197, 232, 0.30);
 }
-html[data-theme="gulf"] {         /* Gulf of Mexico afternoon: deep sea and teal */
-  --paper: #effbfc; --tint: #d6f3f4; --white: #ffffff;
-  --accent: #2ee6c9; --accent-ink: #013a33; --blue: #0a8fb3;
-  --ink: #042f3a; --ink-2: #08404f; --ink-3: #0f5466;
+html[data-theme="sunrise"] {          /* morning: warm light over the brand colors */
+  --paper: #fdf8f3; --tint: #f9eee3;
+  --sky-1: rgba(255, 168, 96, 0.30); --sky-2: rgba(255, 210, 130, 0.30); --sky-3: rgba(44, 197, 232, 0.14);
+  --hero-glow: rgba(255, 158, 80, 0.45);
 }
-html[data-theme="sunset"] {       /* Sarasota sunset: night violet and coral */
-  --paper: #f6f1fb; --tint: #ece2f8; --white: #ffffff;
-  --accent: #ff7a59; --accent-ink: #3a0f00; --blue: #6b4eff;
-  --ink: #170f33; --ink-2: #231849; --ink-3: #33265f;
-  --line: rgba(23, 15, 51, 0.12);
+html[data-theme="gulf"] {             /* the logo's teal, deep sea */
+  --paper: #eefafb; --tint: #d8f2f4;
+  --accent: #22c7c9; --accent-ink: #02383a; --blue: #0e8fb0;
+  --ink: #06263a; --ink-2: #0a3349; --ink-3: #12455f;
+  --sky-1: rgba(34, 199, 201, 0.22); --sky-2: rgba(14, 143, 176, 0.14); --sky-3: rgba(120, 230, 220, 0.18);
+  --hero-glow: rgba(34, 199, 201, 0.38);
+}
+html[data-theme="dusk"] {             /* evening: violet and coral light over the brand colors */
+  --paper: #f4f3fa; --tint: #e9e7f6;
+  --ink: #0a1532; --ink-2: #111f45; --ink-3: #1b2c5c;
+  --sky-1: rgba(124, 92, 255, 0.20); --sky-2: rgba(255, 122, 89, 0.16); --sky-3: rgba(44, 197, 232, 0.12);
+  --hero-glow: rgba(150, 110, 255, 0.42);
 }
 html[data-theme] .btn--accent { box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--accent) 70%, transparent); }
 html[data-theme] .eyebrow .dot { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); }
 html[data-theme] .nav.is-scrolled { background: color-mix(in srgb, var(--paper) 88%, transparent); }
-body, .section--tint, .car, .sale-card, .chip { transition: background-color 0.4s, color 0.4s, border-color 0.4s; }
+body, .section--tint, .car, .sale-card, .chip { transition: background-color 0.5s, color 0.5s, border-color 0.5s; }
+
+/* dynamic background: soft glows drifting behind the light sections */
+body::before {
+  content: ""; position: fixed; inset: -25%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(38% 32% at 18% 28%, var(--sky-1), transparent 70%),
+    radial-gradient(34% 30% at 82% 62%, var(--sky-2), transparent 70%),
+    radial-gradient(30% 26% at 55% 90%, var(--sky-3), transparent 70%);
+  animation: skyDrift 38s ease-in-out infinite alternate; will-change: transform;
+}
+@keyframes skyDrift { from { transform: translate3d(-3%, -2%, 0) rotate(0deg); } to { transform: translate3d(3%, 3%, 0) rotate(6deg); } }
+.section--tint { background: color-mix(in srgb, var(--tint) 72%, transparent); }
+/* a slow glow over the hero photo, colored by theme */
+.hero__media::before {
+  content: ""; position: absolute; inset: -20%; z-index: 3; pointer-events: none; mix-blend-mode: screen;   /* above the dark overlay */
+  background: radial-gradient(40% 35% at 25% 75%, var(--hero-glow), transparent 70%), radial-gradient(35% 30% at 80% 20%, var(--hero-glow), transparent 70%);
+  animation: skyDrift 26s ease-in-out infinite alternate; opacity: 0.7;
+}
+.hero__media::after { z-index: 2; }
+.hero__media { z-index: 0; }                 /* keeps the glow layers inside the photo, under the headline */
+.hero__content { position: relative; z-index: 1; }
+@media (prefers-reduced-motion: reduce) { body::before, .hero__media::before { animation: none; } }
 
 /* hidden palette in the footer */
 .themer { position: relative; display: inline-flex; vertical-align: middle; margin-left: 0.6rem; }
 .themer__btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line-dark); background: rgba(255,255,255,0.06);
   cursor: pointer; font-size: 0.95rem; opacity: 0.4; transition: opacity 0.2s, transform 0.2s; }
 .themer__btn:hover, .themer__btn:focus-visible, .themer__btn[aria-expanded="true"] { opacity: 1; transform: rotate(-12deg) scale(1.08); }
+.themer__menu[hidden] { display: none; }   /* the menu's own display rule must not override [hidden] */
 .themer__menu { position: absolute; bottom: 46px; right: 0; display: grid; gap: 4px; padding: 8px; min-width: 260px; z-index: 30;
   background: var(--white); color: var(--ink); border-radius: 18px; box-shadow: var(--shadow); text-align: left; }
 .themer__menu button { display: flex; align-items: center; gap: 12px; padding: 9px 10px; border: 0; border-radius: 12px; background: none;
@@ -647,10 +678,10 @@ body, .section--tint, .car, .sale-card, .chip { transition: background-color 0.4
 .themer__menu button[aria-pressed="true"] { background: var(--tint); }
 .swatch { width: 26px; height: 26px; border-radius: 50%; flex: none; border: 2px solid #fff; box-shadow: 0 1px 5px rgba(0,0,0,0.25); }
 .swatch--classic { background: linear-gradient(135deg, #071a33 0 50%, #2cc5e8 50%); }
-.swatch--auto { background: conic-gradient(#ffa94d 0 33%, #2cc5e8 0 66%, #6b4eff 0); }
-.swatch--sunrise { background: linear-gradient(135deg, #ffeedd, #ffa94d 55%, #e0582b); }
-.swatch--gulf { background: linear-gradient(135deg, #042f3a 0 45%, #2ee6c9 45%); }
-.swatch--sunset { background: linear-gradient(135deg, #170f33 0 40%, #6b4eff 40% 70%, #ff7a59 70%); }
+.swatch--auto { background: conic-gradient(#ffa860 0 33%, #2cc5e8 0 66%, #7c5cff 0); }
+.swatch--sunrise { background: linear-gradient(135deg, #071a33 0 45%, #ffa860 45% 72%, #2cc5e8 72%); }
+.swatch--gulf { background: linear-gradient(135deg, #06263a 0 50%, #22c7c9 50%); }
+.swatch--dusk { background: linear-gradient(135deg, #0a1532 0 45%, #7c5cff 45% 72%, #2cc5e8 72%); }
 @media (max-width: 600px) { .themer__menu { right: auto; left: 50%; transform: translateX(-50%); } }
 
 /* =========================================================
