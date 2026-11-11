@@ -144,6 +144,7 @@
           <div class="car__actions">
             ${avail
               ? `<a class="btn btn--dark btn--sm" href="${C.company.bookingUrl}" target="_blank" rel="noopener">Book</a>
+                 ${C.company.portalUrl ? `<a class="btn btn--ghost btn--sm" href="${C.company.portalUrl}/book/${encodeURIComponent(car.id)}" target="_blank" rel="noopener">📅 Dates</a>` : ""}
                  <button class="btn btn--ghost btn--sm" data-rto="${car.id}">Rent-to-Own</button>`
               : soon ? `<a class="btn btn--dark btn--sm" href="${C.company.contactUrl}" target="_blank" rel="noopener">Notify me</a>`
               : `<button class="btn btn--ghost btn--sm" data-ask="${car.id}">Ask about a similar car</button>`}
@@ -205,15 +206,20 @@
   /* ---------- Rent-to-Own calculator ---------- */
   const calcCar = $("#calcCar"), calcMonths = $("#calcMonths");
   const groups = [["Available for Rent-to-Own", (c) => C.rtoAvailable(c)], ["Currently on Rent-to-Own (not available)", (c) => c.status === "rto"]];
-  groups.forEach(([label, test]) => {
-    const og = document.createElement("optgroup");
-    og.label = label;
-    C.fleet.filter(test).sort((a, b) => a.value - b.value).forEach((c) => {
-      og.appendChild(new Option(`${C.carName(c)} (${c.color}) · ${money(c.value, false)}`, c.id));
+  function buildCalcOptions() {
+    const keep = calcCar.value;
+    calcCar.innerHTML = "";
+    groups.forEach(([label, test]) => {
+      const og = document.createElement("optgroup");
+      og.label = label;
+      C.fleet.filter(test).sort((a, b) => a.value - b.value).forEach((c) => {
+        og.appendChild(new Option(`${C.carName(c)} (${c.color}) · ${money(c.value, false)}`, c.id));
+      });
+      calcCar.appendChild(og);
     });
-    calcCar.appendChild(og);
-  });
-  calcCar.value = "sorento-2018-lx";
+    calcCar.value = keep && C.byId(keep) ? keep : C.byId("sorento-2018-lx") ? "sorento-2018-lx" : (C.fleet.find(C.rtoAvailable) || C.fleet[0]).id;
+  }
+  buildCalcOptions();
 
   function renderCalc() {
     const frequency = $("input[name=freq]:checked").value;
@@ -275,7 +281,7 @@
   }
 
   /* ---------- Cars for sale ---------- */
-  $("#saleGrid").innerHTML = C.fleet.filter(C.rtoAvailable).sort((a, b) => a.value - b.value).map((c) => {
+  const renderSale = () => $("#saleGrid").innerHTML = C.fleet.filter(C.rtoAvailable).sort((a, b) => a.value - b.value).map((c) => {
     const q = C.rtoQuote({ carId: c.id, frequency: "weekly" });
     return `
       <article class="sale-card">
@@ -292,6 +298,7 @@
         </div>
       </article>`;
   }).join("");
+  renderSale();
   $("#saleGrid").addEventListener("click", (e) => {
     const z = e.target.closest("[data-zoom-sale]");
     if (z) return openViewer(z.dataset.zoomSale, 0);
@@ -301,7 +308,7 @@
 
   /* ---------- FAQ ---------- */
   const P = C.policies;
-  const faq = [
+  const faq = () => [
     ["What is CHURO?", "CHURO is a family-operated car rental business in Sarasota, Florida. After 501+ trips and a 4.9-star rating on Turo, we now rent directly to you: no middlemen, no surprises."],
     ["How does Rent-to-Own work?", P.rto],
     ["Is there a credit check for Rent-to-Own?", "No credit check. Instead, every Rent-to-Own starts with a one-week rental. It shows you can make payments on time, and lets you get a feel for the car before committing. Anything you notice that needs fixing that week, tell us and we'll fix it before signing."],
@@ -324,14 +331,24 @@
     ["Can I do a one-way rental?", P.oneWay],
     ["How do I extend my rental?", P.extend],
   ];
-  $("#faqList").innerHTML = faq.map(([q, a, link], i) => `<details ${i === 0 ? "open" : ""}><summary>${esc(q)}</summary><p>${esc(a)}${link ? ` <a class="faq__link" href="${link[1]}"${/^https?:/.test(link[1]) ? ' target="_blank" rel="noopener"' : ""}>${esc(link[0])}</a>` : ""}</p></details>`).join("");
+  const renderFaq = () => $("#faqList").innerHTML = faq().map(([q, a, link], i) => `<details ${i === 0 ? "open" : ""}><summary>${esc(q)}</summary><p>${esc(a)}${link ? ` <a class="faq__link" href="${link[1]}"${/^https?:/.test(link[1]) ? ' target="_blank" rel="noopener"' : ""}>${esc(link[0])}</a>` : ""}</p></details>`).join("");
 
   /* ---------- misc ---------- */
   $("#year").textContent = new Date().getFullYear();
   $$("[data-open-chat]").forEach((b) => b.addEventListener("click", () => window.ChuroChat && window.ChuroChat.open()));
 
+  renderFaq();
   renderFleet();
   renderCalc();
 
-  window.ChuroApp = { selectRto, showFilter(f) { setFilter(f); $("#fleet").scrollIntoView({ behavior: "smooth" }); } };
+  /** Re-draw everything after live prices arrive from the CHURO Portal (js/live.js). */
+  function refresh() {
+    buildCalcOptions();
+    renderFleet();
+    renderCalc();
+    renderSale();
+    renderFaq();
+  }
+
+  window.ChuroApp = { selectRto, refresh, showFilter(f) { setFilter(f); $("#fleet").scrollIntoView({ behavior: "smooth" }); } };
 })();

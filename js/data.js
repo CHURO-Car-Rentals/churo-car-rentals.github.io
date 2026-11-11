@@ -1,8 +1,11 @@
 /* =========================================================
    CHURO — business knowledge base
-   Single source of truth for the website AND the chatbot.
-   Update a car's status, prices or photos here and every
-   tile, calculator and chatbot answer follows.
+   Built-in copy for the website AND the chatbot.
+   LIVE PRICES: the owner edits cars in the CHURO Portal
+   (churocarrental.pythonanywhere.com/admin → Fleet). js/live.js
+   loads them and replaces the prices, status and details below.
+   This file is the fallback if the portal can't be reached,
+   and where photos and feature lists live.
 
    status:
      "available" – can be rented, rented-to-own, or bought
@@ -25,6 +28,8 @@ window.CHURO = {
     bookingUrl: "https://forms.fillout.com/t/pHEsqVXHKaus",
     contactUrl: "https://docs.google.com/forms/d/e/1FAIpQLSdDgjD5kFGaFIEEmNzoNym8B8v12XjKW2jX8AZsHEpCmtCb_Q/viewform?usp=sharing&ouid=115600938134616394240",
     signingPlace: "MIDFLORIDA",
+    // CHURO Portal (owner app): live prices + availability calendar
+    portalUrl: "https://churocarrental.pythonanywhere.com",
   },
 
   // Rent-to-Own terms
@@ -170,14 +175,39 @@ window.CHURO = {
   C.depositList = () => C.fleet.filter((c) => c.status === "available")
     .sort((a, b) => C.depositDaily(a, false) - C.depositDaily(b, false))
     .map((c) => `${C.carName(c)} (${c.color}): $${C.depositDaily(c, false).toLocaleString("en-US")}`);
-  C.fleet.forEach((c) => {
-    c.dailyRange = Array.isArray(c.daily) ? c.daily : null;
-    c.weeklyRange = Array.isArray(c.weekly) ? c.weekly : null;
-    c.daily = resolve(c.daily, c.id + ":d");
-    c.weekly = resolve(c.weekly, c.id + ":w");
+  // Turns raw prices (number or [min, max]) into today's price.
+  const setPrices = (c, daily, weekly) => {
+    c.dailyRange = Array.isArray(daily) ? daily : null;
+    c.weeklyRange = Array.isArray(weekly) ? weekly : null;
+    c.daily = resolve(daily, c.id + ":d");
+    c.weekly = resolve(weekly, c.id + ":w");
     c.weeklySavingsPct = Math.round((1 - c.weekly / (c.daily * 7)) * 100); // vs. paying the daily rate 7 times
-  });
+  };
+  C.fleet.forEach((c) => setPrices(c, c.daily, c.weekly));
   C.priceDate = today;
+
+  /**
+   * Live fleet from the CHURO Portal (/api/fleet.json). The owner edits cars there; this
+   * replaces prices, status and details here. Photos and features stay from this file
+   * (new cars use the portal's photo). Cars the portal hides or marks sold are removed.
+   */
+  C.applyLive = (live) => {
+    if (!live || !Array.isArray(live.fleet) || !live.fleet.length) return false;
+    const FIELDS = ["year", "make", "model", "trim", "color", "type", "seats", "value", "down", "status", "blurb"];
+    C.fleet = live.fleet.map((l) => {
+      const c = C.byIdStatic[l.id] ? { ...C.byIdStatic[l.id] } : { id: l.id, photos: [], blurb: "" };
+      FIELDS.forEach((f) => { if (l[f] !== undefined && l[f] !== null && l[f] !== "") c[f] = l[f]; });
+      if (l.down === null) c.down = null;
+      if (l.minWeekly) c.minWeekly = l.minWeekly; else delete c.minWeekly;
+      if (!c.photos.length) c.photos = [l.photo || "logo.jpg"];
+      c.booked = l.booked || [];
+      setPrices(c, l.daily, l.weekly);
+      return c;
+    });
+    C.live = live.updated || true;
+    return true;
+  };
+  C.byIdStatic = Object.fromEntries(C.fleet.map((c) => [c.id, { ...c }]));
 
   /** Rental estimate: full weeks at the weekly rate, leftover days at the daily rate (capped at a week). */
   C.rentalQuote = (carId, days) => {
