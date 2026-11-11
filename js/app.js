@@ -41,6 +41,25 @@
   });
   document.addEventListener("click", (e) => { if (!more.contains(e.target)) { more.classList.remove("is-open"); moreBtn.setAttribute("aria-expanded", "false"); } });
 
+  /* ---------- Balanced tile rows: every row fills the width ---------- */
+  // Fits as many columns as the minimum card width allows, then spreads the cards so every row is full.
+  function balance(grid, minWidth) {
+    const cards = [...grid.children].filter((el) => el.tagName === "ARTICLE");
+    if (!cards.length) return;
+    const gap = parseFloat(getComputedStyle(grid).columnGap) || 16;
+    let cols = Math.max(1, Math.floor((grid.clientWidth + gap) / (minWidth + gap)));
+    if (cards.length % cols && cols > 2 && cards.length % (cols - 1) === 0) cols -= 1;   // e.g. 9 cars: 3·3·3 beats 5·4
+    // Full rows of `cols`; leftover cards go one each to the first rows (so 13 on 3 columns = 4·3·3·3, never a lone card)
+    const n = cards.length, rows = Math.max(1, Math.floor(n / cols)), left = n - rows * cols;
+    const sizes = n < cols ? [n] : Array.from({ length: rows }, (_, r) => cols + Math.floor(left / rows) + (r < left % rows ? 1 : 0));
+    let i = 0;
+    for (const k of sizes) {
+      for (let j = 0; j < k; j++, i++) cards[i].style.flex = `0 0 calc((100% - ${(k - 1) * gap}px) / ${k})`;
+    }
+  }
+  const balanceAll = () => { balance($("#fleetGrid"), 320); balance($("#saleGrid"), 280); };
+  window.addEventListener("resize", balanceAll);
+
   /* ---------- Search / rental estimate ---------- */
   const startInp = $("#startDate"), endInp = $("#endDate");
   const today = new Date();
@@ -159,6 +178,7 @@
         $$(".car__thumbs button", el).forEach((b, j) => b.classList.toggle("is-active", i === j));
       }, { passive: true });
     });
+    balance(grid, 320);
   }
 
   $("#fleetGrid").addEventListener("click", (e) => {
@@ -299,6 +319,7 @@
       </article>`;
   }).join("");
   renderSale();
+  balanceAll();
   $("#saleGrid").addEventListener("click", (e) => {
     const z = e.target.closest("[data-zoom-sale]");
     if (z) return openViewer(z.dataset.zoomSale, 0);
@@ -348,6 +369,7 @@
     renderCalc();
     renderSale();
     renderFaq();
+    balanceAll();
   }
 
   window.ChuroApp = { selectRto, refresh, showFilter(f) { setFilter(f); $("#fleet").scrollIntoView({ behavior: "smooth" }); } };

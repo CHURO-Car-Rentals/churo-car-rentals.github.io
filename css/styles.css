@@ -607,3 +607,59 @@ legend { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; }
 .stat-link:hover span { text-decoration: underline; }
 .turo-link { color: var(--accent); font-weight: 700; text-decoration: none; white-space: nowrap; }
 .turo-link:hover { text-decoration: underline; }
+
+/* =========================================================
+   Color themes (js/theme.js). Classic = the :root colors above.
+   ========================================================= */
+html[data-theme="sunrise"] {      /* Siesta Key morning: warm cream, coral, amber */
+  --paper: #fff8f1; --tint: #ffeedd; --white: #ffffff;
+  --accent: #ffa94d; --accent-ink: #3d1c00; --blue: #e0582b;
+  --ink: #0f1d3a; --ink-2: #1a2b4f; --ink-3: #283d66;
+}
+html[data-theme="gulf"] {         /* Gulf of Mexico afternoon: deep sea and teal */
+  --paper: #effbfc; --tint: #d6f3f4; --white: #ffffff;
+  --accent: #2ee6c9; --accent-ink: #013a33; --blue: #0a8fb3;
+  --ink: #042f3a; --ink-2: #08404f; --ink-3: #0f5466;
+}
+html[data-theme="sunset"] {       /* Sarasota sunset: night violet and coral */
+  --paper: #f6f1fb; --tint: #ece2f8; --white: #ffffff;
+  --accent: #ff7a59; --accent-ink: #3a0f00; --blue: #6b4eff;
+  --ink: #170f33; --ink-2: #231849; --ink-3: #33265f;
+  --line: rgba(23, 15, 51, 0.12);
+}
+html[data-theme] .btn--accent { box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--accent) 70%, transparent); }
+html[data-theme] .eyebrow .dot { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); }
+html[data-theme] .nav.is-scrolled { background: color-mix(in srgb, var(--paper) 88%, transparent); }
+body, .section--tint, .car, .sale-card, .chip { transition: background-color 0.4s, color 0.4s, border-color 0.4s; }
+
+/* hidden palette in the footer */
+.themer { position: relative; display: inline-flex; vertical-align: middle; margin-left: 0.6rem; }
+.themer__btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line-dark); background: rgba(255,255,255,0.06);
+  cursor: pointer; font-size: 0.95rem; opacity: 0.4; transition: opacity 0.2s, transform 0.2s; }
+.themer__btn:hover, .themer__btn:focus-visible, .themer__btn[aria-expanded="true"] { opacity: 1; transform: rotate(-12deg) scale(1.08); }
+.themer__menu { position: absolute; bottom: 46px; right: 0; display: grid; gap: 4px; padding: 8px; min-width: 260px; z-index: 30;
+  background: var(--white); color: var(--ink); border-radius: 18px; box-shadow: var(--shadow); text-align: left; }
+.themer__menu button { display: flex; align-items: center; gap: 12px; padding: 9px 10px; border: 0; border-radius: 12px; background: none;
+  color: inherit; font: inherit; cursor: pointer; text-align: left; }
+.themer__menu button b { display: block; font-size: 0.92rem; }
+.themer__menu button small { display: block; font-size: 0.75rem; color: var(--muted); }
+.themer__menu button:hover { background: var(--paper); }
+.themer__menu button[aria-pressed="true"] { background: var(--tint); }
+.swatch { width: 26px; height: 26px; border-radius: 50%; flex: none; border: 2px solid #fff; box-shadow: 0 1px 5px rgba(0,0,0,0.25); }
+.swatch--classic { background: linear-gradient(135deg, #071a33 0 50%, #2cc5e8 50%); }
+.swatch--auto { background: conic-gradient(#ffa94d 0 33%, #2cc5e8 0 66%, #6b4eff 0); }
+.swatch--sunrise { background: linear-gradient(135deg, #ffeedd, #ffa94d 55%, #e0582b); }
+.swatch--gulf { background: linear-gradient(135deg, #042f3a 0 45%, #2ee6c9 45%); }
+.swatch--sunset { background: linear-gradient(135deg, #170f33 0 40%, #6b4eff 40% 70%, #ff7a59 70%); }
+@media (max-width: 600px) { .themer__menu { right: auto; left: 50%; transform: translateX(-50%); } }
+
+/* =========================================================
+   Tile rows that always fill the width (balanced by js/app.js:
+   13 cars on 3 columns → 4·3·3·3). Photos keep one height.
+   ========================================================= */
+.fleet, .sale { display: flex; flex-wrap: wrap; }
+.fleet > .car { flex: 1 1 320px; }
+.sale > .sale-card { flex: 1 1 280px; }
+.fleet .car__media { aspect-ratio: auto; height: clamp(230px, 24vw, 290px); }
+.sale .sale-card img { aspect-ratio: auto; height: clamp(170px, 16vw, 200px); }
+.fleet > .empty { flex: 1 1 100%; }
