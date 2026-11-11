@@ -89,7 +89,7 @@ FACTS
 - To rent: valid Florida driver's license + 2 different recent proofs of address in your name (utility bill, paystub, bank statement). Insurance card optional. Age 21+.
 - Daily rental deposit: $200 with 2 proofs of address, otherwise up to $1,000 depending on the car; refunded minus tolls, citations, fees.
 - Payment: cash, Apple Pay, Venmo, Chime or Zelle. Do not mention or offer card payments.
-- Apple CarPlay: almost all cars have it (the Nissan Sentra does); a couple don't, so offer to confirm for a specific car. Best on gas: the 2013 Nissan Sentra SV, hands down.
+- Apple CarPlay: every Kia and Nissan has it except the 2014 Kia Optima LX. Best on gas: the 2013 Nissan Sentra SV, hands down.
 - Pick-up and return in Sarasota, FL 34234 (round trip). Delivery within 15 miles of 34234 costs $140.
 - Drive anywhere in Florida; cars are GPS-tracked and NOT allowed outside Florida. 200 miles per day included.
 - Cars are cleaned, sanitized and fully inspected before every rental; pre- and post-trip photos are taken each time.
@@ -252,18 +252,21 @@ RULES
   const soonCars = () => C.fleet.filter((c) => c.status === "soon");
 
   /** Honest answers for things we don't carry, with the closest real options. */
+  // Comfort features worth mentioning (leather, sunroof, memory seats); "" if the car has none
+  const upscale = (c) => (c.features || []).filter((f) => /leather|sunroof|memory/i.test(f)).join(", ").toLowerCase();
+
   function wishReply(e) {
     const soon = soonCars();
     const sporty = () => {
       const picks = [...best((c) => c.type === "Sedan").slice(0, 1), ...withFeature("sunroof").slice(0, 1)];
-      return `We don't have sports cars or convertibles. 🏁 Our fleet is reliable Kia SUVs and sedans, picked for comfort and great weekly prices. The closest to sporty:\n${listCars(picks, (c) => (c.features ? "top trim, " + c.features.slice(1, 3).join(", ").toLowerCase() : c.blurb.split(".")[0].toLowerCase()))}` +
+      return `We don't have sports cars or convertibles. 🏁 Our fleet is reliable Kia SUVs and sedans, picked for comfort and great weekly prices. The closest to sporty:\n${listCars(picks, (c) => upscale(c) ? ((c.features || []).some((f) => /top .*trim/i.test(f)) ? "top trim, " : "") + upscale(c).split(", ").slice(0, 2).join(", ") : c.blurb.split(".")[0].toLowerCase())}` +
         (soon.length ? `\n\n⚡ Coming soon: the **${C.carName(soon[0])}** (${soon[0].color}), ${soon[0].blurb.charAt(0).toLowerCase() + soon[0].blurb.slice(1)}` : "");
     };
     switch (e.wish) {
       case "sports": return { text: sporty(), cars: [...best((c) => c.type === "Sedan").slice(0, 1), ...withFeature("sunroof").slice(0, 1)], chips: ["Price for a weekend", soon.length ? `Tell me about the ${soon[0].make}` : "What cars are available?", "What do I need to rent?"] };
       case "luxury": {
         const cars = [...withFeature("leather"), ...best((c) => c.year >= 2022)].filter((c, i, a) => a.indexOf(c) === i).slice(0, 3);
-        return { text: `For something special, these are our most upscale rides:\n${listCars(cars, (c) => (c.features ? c.features.filter((f) => /leather|sunroof|memory/i.test(f)).join(", ").toLowerCase() : "our newest model"))}\n\nWe don't carry luxury brands like BMW or Mercedes, but the SX trims come loaded: leather, panoramic sunroof and memory seats.`, cars, chips: ["Price for a weekend", "What do I need to rent?"] };
+        return { text: `For something special, these are our most upscale rides:\n${listCars(cars, (c) => upscale(c) || "our newest model")}\n\nWe don't carry luxury brands like BMW or Mercedes, but the Sorento SX and Optima EX come loaded: leather, panoramic sunroof and memory seats.`, cars, chips: ["Price for a weekend", "What do I need to rent?"] };
       }
       case "truck": {
         const cars = best((c) => c.seats >= 7).slice(0, 2);
@@ -295,10 +298,11 @@ RULES
   }
 
   function featureReply(e, car) {
-    if (/carplay/.test(e.feature)) { // known: almost every car has it
+    if (/carplay/.test(e.feature)) { // every Kia and Nissan except the 2014 Optima LX
       const has = car && (car.features || []).some((f) => /carplay/i.test(f));
       return { text: has ? `Yes! ✅ The **${C.carName(car)}** has **Apple CarPlay**.`
-        : car ? `Almost all of our cars have **Apple CarPlay**, but a couple don't. [💬 WhatsApp us](#wa) and we'll confirm it for the **${C.carName(car)}**.`
+        : car && car.carplay === false ? `The **${C.carName(car)}** doesn't have Apple CarPlay. Every other Kia and Nissan in our fleet does.`
+        : car ? `Almost all of our cars have **Apple CarPlay**. [💬 WhatsApp us](#wa) and we'll confirm it for the **${C.carName(car)}**.`
         : `${P.carplay.replace("Apple CarPlay", "**Apple CarPlay**")} [💬 WhatsApp us](#wa) to check.`, cars: car ? [car] : null };
     }
     const f = (FEATURE_NAMES[e.feature] || e.feature).replace(/\bautomatic\b/, "an automatic transmission").replace(/^(manual|stick shift).*/, "a manual transmission");
